@@ -10,5 +10,17 @@ spring:
   jpa:
     generate-ddl: false
     show-sql: true
-
+    
+  # Cassandra
+  cassandra:
+    local-datacenter: datacenter1
+    keyspace-name: chat
+    username: cassandra
+    password: cassandra
+    schema-action: create_if_not_exists
+    request:
+      timeout: 10s
+    connection:
+      connect-timeout: 10s
+      init-query-timeout: 10s
 
