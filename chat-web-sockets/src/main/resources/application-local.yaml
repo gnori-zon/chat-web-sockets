@@ -1,0 +1,14 @@
+
+spring:
+# PostgreSql
+  liquibase:
+    enabled: true
+  datasource:
+    url: jdbc:postgresql://localhost:5432/chat
+    username: chat
+    password: chat
+  jpa:
+    generate-ddl: false
+    show-sql: true
+
+
