@@ -1,6 +1,6 @@
 spring:
 
-# PostgreSql
+  # PostgreSql
   liquibase:
     enabled: true
   datasource:
@@ -24,3 +24,7 @@ spring:
       connect-timeout: 10s
       init-query-timeout: 10s
 
+  # Redis
+redis:
+  host: localhost
+  port: 6379
