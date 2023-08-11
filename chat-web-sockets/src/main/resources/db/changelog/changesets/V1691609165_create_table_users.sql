@@ -1,6 +1,6 @@
 -- liquibase formatted sql
 
--- changeset gnori-zon:V1691609165_create_table_users:\nGO
+-- changeset gnori-zon:V1691609165_create_table_users
 
 create table users(
     id bigserial primary key,

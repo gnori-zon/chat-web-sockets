@@ -1,6 +1,6 @@
 -- liquibase formatted sql
 
--- changeset gnori-zon:V1691609166_create_table_users_role:\nGO
+-- changeset gnori-zon:V1691609166_create_table_users_role
 
 create table users_role(
     user_id bigint not null,

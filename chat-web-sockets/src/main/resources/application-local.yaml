@@ -1,5 +1,5 @@
-
 spring:
+
 # PostgreSql
   liquibase:
     enabled: true
@@ -10,7 +10,7 @@ spring:
   jpa:
     generate-ddl: false
     show-sql: true
-    
+
   # Cassandra
   cassandra:
     local-datacenter: datacenter1
