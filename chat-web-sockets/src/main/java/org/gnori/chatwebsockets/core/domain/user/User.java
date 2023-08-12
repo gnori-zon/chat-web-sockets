@@ -8,6 +8,7 @@ import org.gnori.chatwebsockets.core.domain.user.enums.Role;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Entity
@@ -18,7 +19,7 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @FieldDefaults(level = AccessLevel.PROTECTED)
 @EqualsAndHashCode(of = {"username"})
-public class User extends AbstractEntity {
+public class User extends AbstractEntity implements Serializable {
 
     @Column(name = "username", nullable = false, unique = true)
     String username;
