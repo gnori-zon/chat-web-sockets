@@ -1,14 +1,16 @@
 package org.gnori.chatwebsockets.core.domain.user;
 
+import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
+import jakarta.persistence.Table;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.gnori.chatwebsockets.core.domain.AbstractEntity;
 import org.gnori.chatwebsockets.core.domain.user.enums.Role;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.*;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -44,4 +46,9 @@ public class User extends AbstractEntity implements Serializable {
     @JoinColumn
     @OnDelete(action = OnDeleteAction.CASCADE)
     List<Role> roles;
+
+    @Column(name = "chat_ids")
+    @Type(JsonType.class)
+    List<String> chatIds = new ArrayList<>();
+
 }

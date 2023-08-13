@@ -24,5 +24,7 @@ public class ChatRoom implements Serializable {
 
     String description;
 
+    String ownerUsername;
+
     List<User> connectedUsers;
 }

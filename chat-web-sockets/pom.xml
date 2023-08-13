@@ -74,6 +74,11 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>io.hypersistence</groupId>
+            <artifactId>hypersistence-utils-hibernate-62</artifactId>
+            <version>3.5.0</version>
+        </dependency>
         <!--TEST-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
