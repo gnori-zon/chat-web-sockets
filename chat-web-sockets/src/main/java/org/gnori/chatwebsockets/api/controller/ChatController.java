@@ -10,7 +10,7 @@ import org.springframework.stereotype.Controller;
 
 @Controller
 @RequiredArgsConstructor
-public class ChatRoomController {
+public class ChatController {
 
     @MessageMapping("/chat/message:send")
     @SendTo("/topic/public")
