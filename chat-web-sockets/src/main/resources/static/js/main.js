@@ -3,9 +3,16 @@
 var usernamePage = document.querySelector('#username-page');
 var chatPage = document.querySelector('#chat-page');
 var usernameForm = document.querySelector('#usernameForm');
+
 var messageForm = document.querySelector('#messageForm');
 var messageInput = document.querySelector('#message');
 var messageArea = document.querySelector('#messageArea');
+
+var newChatForm = document.querySelector('#newChatForm');
+var chatNameInput = document.querySelector('#chatName');
+var chatDescriptionInput = document.querySelector('#chatDescription');
+var chatArea = document.querySelector('#chatArea');
+
 var connectingElement = document.querySelector('.connecting');
 
 var stompClient = null;
@@ -33,14 +40,12 @@ function connect(event) {
 
 
 function onConnected() {
-    // Subscribe to the Public Topic
     stompClient.subscribe('/topic/public', onMessageReceived);
-
-    // Tell your username to the server
-    stompClient.send("/app/chat/user:add",
-        {},
-        JSON.stringify({fromUser: username, text: 'hello'})
-    )
+    stompClient.subscribe(('/topic/'+ username +'/chat-rooms'), onChatRoomReceived);
+    //
+    stompClient.send("/app/chat/user:add", {}, JSON.stringify({fromUser: username, text: 'hello'}))
+    //put username and get all chats
+    stompClient.send('/app/chat-rooms:list');
 
     connectingElement.classList.add('hidden');
 }
@@ -57,7 +62,7 @@ function sendMessage(event) {
     if (messageContent && stompClient) {
         var chatMessage = {
             fromUser: username,
-            text: messageContent,
+            text: messageContent
         };
         stompClient.send("/app/chat/message:send", {}, JSON.stringify(chatMessage));
         messageInput.value = '';
@@ -65,6 +70,56 @@ function sendMessage(event) {
     event.preventDefault();
 }
 
+function createChat(event) {
+    var chatName = chatNameInput.value.trim();
+    var chatDescription = chatDescriptionInput.value.trim();
+    if (chatName && chatDescription && stompClient) {
+        var chatRoomDto = {
+            name: chatName,
+            description: chatDescription
+        };
+        stompClient.send("/app/chat-rooms:create", {}, JSON.stringify(chatRoomDto));
+        chatNameInput.value = '';
+        chatDescriptionInput.value = '';
+    }
+    event.preventDefault();
+}
+
+function onChatRoomReceived(payload) {
+    if (payload.body.startsWith('[')) {
+        JSON.parse(payload.body).forEach(chat => processOneChat(chat))
+    } else {
+        processOneChat(JSON.parse(payload.body));
+    }
+
+}
+
+function processOneChat(chatDto) {
+    var chatElement = document.createElement('li');
+    chatArea.classList.add('chat')
+
+    var avatarChatElement = document.createElement('i');
+    var avatarChatText = document.createTextNode(chatDto.name[0]);
+    avatarChatElement.appendChild(avatarChatText);
+    avatarChatElement.style['background-color'] = getAvatarColor(chatDto.name);
+
+    chatElement.appendChild(avatarChatElement);
+
+    var nameTextChatElement = document.createElement('p');
+    var nameChat = document.createTextNode(chatDto.name);
+    nameTextChatElement.appendChild(nameChat);
+
+    chatElement.appendChild(nameTextChatElement);
+
+    var descriptionTextChatElement = document.createElement('p');
+    var descriptionChat = document.createTextNode(chatDto.description);
+    descriptionTextChatElement.appendChild(descriptionChat);
+
+    chatElement.appendChild(descriptionTextChatElement);
+
+    chatArea.appendChild(chatElement);
+    chatArea.scrollTop = chatArea.scrollHeight;
+}
 
 function onMessageReceived(payload) {
     var message = JSON.parse(payload.body);
@@ -109,3 +164,4 @@ function getAvatarColor(messageSender) {
 
 usernameForm.addEventListener('submit', connect, true)
 messageForm.addEventListener('submit', sendMessage, true)
+newChatForm.addEventListener('submit', createChat, true)

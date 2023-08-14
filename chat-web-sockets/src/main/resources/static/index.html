@@ -25,9 +25,12 @@
     <div class="chat-header">
       <h2>simple shat</h2>
     </div>
-    <div class="connectiong">
+    <div class="connecting">
       Connecting...
     </div>
+    <ul id="chatArea">
+
+    </ul>
     <ul id="messageArea">
 
     </ul>
@@ -36,6 +39,17 @@
         <div class="input-group clearfix">
           <input type="text" id="message" placeholder="Type a message..." autocomplete="off" class="form-control"/>
           <button type="submit" class="primary">send</button>
+        </div>
+      </div>
+    </form>
+    <form id="newChatForm" name="newChatForm">
+      <div class="form-group">
+        <div class="input-group clearfix">
+          <label for="chatName">chat name</label>
+          <input type="text" id="chatName" placeholder="Type a chat name..." autocomplete="off" class="form-control"/>
+          <label for="chatDescription">chat description</label>
+          <input type="text" id="chatDescription" placeholder="Type a chat description..." autocomplete="off" class="form-control"/>
+          <button type="submit" class="primary">create</button>
         </div>
       </div>
     </form>
