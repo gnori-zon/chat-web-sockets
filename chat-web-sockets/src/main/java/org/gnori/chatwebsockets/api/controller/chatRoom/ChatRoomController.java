@@ -6,64 +6,111 @@ import lombok.experimental.FieldDefaults;
 import org.gnori.chatwebsockets.api.dto.ChatRoomDto;
 import org.gnori.chatwebsockets.core.service.domain.impl.ChatRoomService;
 import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import java.security.Principal;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
-import static org.gnori.chatwebsockets.api.constant.Endpoint.CHAT_ROOMS;
-import static org.gnori.chatwebsockets.api.constant.Endpoint.TARGET_ID;
+import static org.gnori.chatwebsockets.api.constant.Endpoint.*;
 
 @RestController
-@RequestMapping(CHAT_ROOMS)
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ChatRoomController {
 
+    SimpMessagingTemplate simpMessagingTemplate;
     ChatRoomService chatRoomService;
 
-    @GetMapping
-    @ResponseStatus(HttpStatus.OK)
-    public List<ChatRoomDto> getForUser(@AuthenticationPrincipal CustomUserDetails user) {
-        return chatRoomService.getAll(user);
-    }
-
-    @GetMapping(TARGET_ID)
-    @ResponseStatus(HttpStatus.OK)
-    public ChatRoomDto getChatById(
-            @AuthenticationPrincipal CustomUserDetails user,
-            @PathVariable String targetId
+    @MessageMapping(CHAT_ROOMS + LIST_PATH)
+    public void getForUser(
+            SimpMessageHeaderAccessor headerAccessor
     ) {
-        return chatRoomService.getById(targetId, user);
+        Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
+                sessionAttrs -> {
+                    final CustomUserDetails user = convertFrom(headerAccessor.getUser());
+                    simpMessagingTemplate.convertAndSend(
+                            String.format(TOPIC_USER_CHAT_ROOMS, user.getUsername()),
+                            chatRoomService.getAll(user)
+                    );
+                });
     }
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public ChatRoomDto create(
-            @AuthenticationPrincipal CustomUserDetails user,
-            @RequestBody ChatRoomDto chatRoomDto
+    @MessageMapping(CHAT_ROOMS + ONE_PATH)
+    public void getChatById(
+            SimpMessageHeaderAccessor headerAccessor
     ) {
-        return chatRoomService.create(chatRoomDto, user);
+        Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
+                sessionAttrs -> {
+                    final CustomUserDetails user = convertFrom(headerAccessor.getUser());
+                    final String targetId = (String) sessionAttrs.get(TARGET_ID);
+                    final ChatRoomDto chatRoomDto = chatRoomService.getById(targetId, user);
+
+                    simpMessagingTemplate.convertAndSend(
+                            String.format(TOPIC_USER_CHAT_ROOMS, user.getUsername()),
+                            chatRoomDto
+                    );
+                });
     }
 
-    @PutMapping(TARGET_ID)
-    @ResponseStatus(HttpStatus.OK)
-    public ChatRoomDto updateById(
-            @AuthenticationPrincipal CustomUserDetails user,
-            @PathVariable String targetId,
-            @RequestBody ChatRoomDto chatRoomDto
+    @MessageMapping(CHAT_ROOMS + CREATE_PATH)
+    public void create(
+            @Payload ChatRoomDto chatRoomDto,
+            SimpMessageHeaderAccessor headerAccessor
     ) {
-        return chatRoomService.updateById(targetId, chatRoomDto, user);
+        Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
+                sessionAttrs -> {
+                    final CustomUserDetails user = convertFrom(headerAccessor.getUser());
+                    final ChatRoomDto createdChatRoomDto = chatRoomService.create(chatRoomDto, user);
+
+                    simpMessagingTemplate.convertAndSend(
+                            String.format(TOPIC_USER_CHAT_ROOMS, user.getUsername()),
+                            createdChatRoomDto
+                    );
+                });
     }
 
-    @DeleteMapping(TARGET_ID)
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @MessageMapping(CHAT_ROOMS + UPDATE_PATH)
+    @SendTo("/topic/chat-rooms")
+    public void updateById(
+            @Payload ChatRoomDto chatRoomDto,
+            SimpMessageHeaderAccessor headerAccessor
+    ) {
+        final Map<String, Object> sessionAttrs = headerAccessor.getSessionAttributes();
+        if (sessionAttrs != null) {
+            final CustomUserDetails user = convertFrom(headerAccessor.getUser());
+            final String targetId = (String) sessionAttrs.get(TARGET_ID);
+
+            simpMessagingTemplate.convertAndSend(
+                    String.format(TOPIC_USER_CHAT_ROOMS, user.getUsername()),
+                    chatRoomService.updateById(targetId, chatRoomDto, user)
+            );
+        }
+    }
+
+    @MessageMapping(CHAT_ROOMS + DELETE_PATH)
     public void deleteById(
-            @AuthenticationPrincipal CustomUserDetails user,
-            @PathVariable String targetId
+            SimpMessageHeaderAccessor headerAccessor
     ) {
-        chatRoomService.deleteById(targetId, user);
+        final Map<String, Object> sessionAttrs = headerAccessor.getSessionAttributes();
+        if (sessionAttrs != null) {
+            final CustomUserDetails user = convertFrom(headerAccessor.getUser());
+            final String targetId = (String) sessionAttrs.get(TARGET_ID);
+            chatRoomService.deleteById(targetId, user);
+        }
+    }
+
+    private CustomUserDetails convertFrom(Principal user) {
+        return Objects.requireNonNull(
+                (CustomUserDetails)((UsernamePasswordAuthenticationToken) user).getPrincipal()
+        );
     }
 
 

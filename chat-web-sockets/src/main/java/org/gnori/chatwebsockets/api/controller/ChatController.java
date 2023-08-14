@@ -5,7 +5,6 @@ import org.gnori.chatwebsockets.core.domain.message.Message;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
 @Controller
@@ -21,12 +20,7 @@ public class ChatController {
     @MessageMapping("/chat/user:add")
     @SendTo("/topic/public")
     public Message addUser (
-            @Payload Message message,
-            SimpMessageHeaderAccessor headerAccessor
-    ) {
-        if (headerAccessor.getSessionAttributes() != null) {
-            headerAccessor.getSessionAttributes().put("username", message.getFromUser());
-        }
+            @Payload Message message) {
         return message;
     }
 }
