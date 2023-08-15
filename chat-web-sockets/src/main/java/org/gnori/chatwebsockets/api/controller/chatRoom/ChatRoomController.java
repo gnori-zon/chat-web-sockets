@@ -37,7 +37,8 @@ public class ChatRoomController {
                             String.format(TOPIC_USER_CHAT_ROOMS, user.getUsername()),
                             chatRoomService.getAll(user)
                     );
-                });
+                }
+        );
     }
 
     @MessageMapping(CHAT_ROOMS + ONE_PATH)

@@ -5,9 +5,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.gnori.chatwebsockets.api.converter.AbstractConverter;
 import org.gnori.chatwebsockets.api.dto.AbstractDto;
+import org.gnori.chatwebsockets.core.exception.impl.NotFoundException;
 import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,9 +33,7 @@ public abstract class BaseService<E, ID, D extends AbstractDto<ID>, C extends Ab
     public D getById(ID id, CustomUserDetails user) {
         return converter.convertFrom(
                 repository.findById(id)
-                        .orElseThrow(
-                                () -> new RuntimeException(String.format("not found with id: %s", id))
-                        )
+                        .orElseThrow(NotFoundException::new)
         );
     }
 
@@ -53,7 +51,7 @@ public abstract class BaseService<E, ID, D extends AbstractDto<ID>, C extends Ab
 
     @Override
     public D updateById(ID id, D dto, CustomUserDetails user) {
-        if (!repository.existsById(id)) throw new RuntimeException(String.format("not found with id: %s", id));
+        if (!repository.existsById(id)) throw new NotFoundException();
         dto.setId(id);
         return converter.convertFrom(
                 repository.save(converter.convertFrom(dto))
