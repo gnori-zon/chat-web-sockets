@@ -5,9 +5,10 @@ import lombok.experimental.FieldDefaults;
 import org.apache.commons.collections4.ListUtils;
 import org.gnori.chatwebsockets.api.converter.ChatRoomConverter;
 import org.gnori.chatwebsockets.api.dto.ChatRoomDto;
-import org.gnori.chatwebsockets.api.dto.UserDto;
 import org.gnori.chatwebsockets.core.domain.chat.ChatRoom;
 import org.gnori.chatwebsockets.core.domain.user.User;
+import org.gnori.chatwebsockets.core.exception.impl.ForbiddenException;
+import org.gnori.chatwebsockets.core.exception.impl.NotFoundException;
 import org.gnori.chatwebsockets.core.repository.ChatRoomRepository;
 import org.gnori.chatwebsockets.core.repository.UserRepository;
 import org.gnori.chatwebsockets.core.service.domain.BaseService;
@@ -31,7 +32,7 @@ public class ChatRoomService extends BaseService<ChatRoom, String, ChatRoomDto, 
 
     @Override
     public List<ChatRoomDto> getAll(CustomUserDetails user) {
-        final User userData = userRepository.findByUsername(user.getUsername()).orElseThrow(() -> new RuntimeException("internal error"));
+        final User userData = user.getUser();
         final List<String> chatIds = userData.getChatIds();
         if (chatIds == null || chatIds.isEmpty()) return Collections.emptyList();
         return converter.convertAll(
@@ -45,7 +46,7 @@ public class ChatRoomService extends BaseService<ChatRoom, String, ChatRoomDto, 
         if (userRepository.hasChatRoomId(user.getUsername(), chatRoomId)) {
             return super.getById(chatRoomId, user);
         }
-        throw new RuntimeException("You don't have enough rights to do this");
+        throw new ForbiddenException();
     }
 
     @Override
@@ -58,7 +59,7 @@ public class ChatRoomService extends BaseService<ChatRoom, String, ChatRoomDto, 
                 return;
             }
         }
-        throw new RuntimeException("You don't have enough rights to do this");
+        throw new ForbiddenException();
     }
 
     @Override
@@ -86,10 +87,10 @@ public class ChatRoomService extends BaseService<ChatRoom, String, ChatRoomDto, 
                 );
             }
         }
-        throw new RuntimeException("You don't have enough rights to do this");
+        throw new ForbiddenException();
     }
 
-    public List<UserDto> deleteUser(String chatRoomId, String username, CustomUserDetails user) {
+    public ChatRoomDto deleteUser(String chatRoomId, String username, CustomUserDetails user) {
         final ChatRoom chatRoom = getChatRoomOrElseThrow(chatRoomId);
 
         if (user.getUsername().equals(chatRoom.getOwnerUsername()) && !user.getUsername().equals(username)) {
@@ -98,12 +99,12 @@ public class ChatRoomService extends BaseService<ChatRoom, String, ChatRoomDto, 
             }
             repository.save(chatRoom);
             userRepository.deleteChatRoomId(username, chatRoomId);
-            return converter.convertAllUserFrom(chatRoom.getConnectedUsers());
+            return converter.convertFrom(chatRoom);
         }
-        throw new RuntimeException("You don't have enough rights to do this");
+        throw new ForbiddenException();
     }
 
-    public List<UserDto> addUser(String chatRoomId, String username, CustomUserDetails user) {
+    public ChatRoomDto addUser(String chatRoomId, String username, CustomUserDetails user) {
         ChatRoom chatRoom = getChatRoomOrElseThrow(chatRoomId);
 
         if (user.getUsername().equals(chatRoom.getOwnerUsername())) {
@@ -113,16 +114,14 @@ public class ChatRoomService extends BaseService<ChatRoom, String, ChatRoomDto, 
 
             chatRoom = repository.save(chatRoom);
             userRepository.addChatRoomId(username, chatRoomId);
-            return converter.convertAllUserFrom(chatRoom.getConnectedUsers());
+            return converter.convertFrom(chatRoom);
         }
-        throw new RuntimeException("You don't have enough rights to do this");
+        throw new ForbiddenException();
     }
 
     private ChatRoom getChatRoomOrElseThrow(String chatRoomId) {
         return repository.findById(chatRoomId)
-                .orElseThrow(
-                        () -> new RuntimeException(String.format("not found chat-room with id: %s", chatRoomId))
-                );
+                .orElseThrow(NotFoundException::new);
     }
 
     private boolean isNotBlankList(List<?> list) {

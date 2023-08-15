@@ -17,6 +17,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByUsername(username)
                 .map(CustomUserDetails::new)
-                .orElseThrow(() -> new RuntimeException("invalid authorize"));
+                .orElseThrow(() -> new UsernameNotFoundException("Invalid authorize"));
     }
 }
