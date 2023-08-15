@@ -1,4 +1,4 @@
-package org.gnori.chatwebsockets.api.controller.chatRoom;
+package org.gnori.chatwebsockets.api.controller.chatroom;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -8,18 +8,15 @@ import org.gnori.chatwebsockets.core.service.domain.impl.ChatRoomService;
 import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.security.Principal;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 import static org.gnori.chatwebsockets.api.constant.Endpoint.*;
+import static org.gnori.chatwebsockets.core.service.security.util.SecurityUtil.convertFrom;
 
 @RestController
 @RequiredArgsConstructor
@@ -45,12 +42,12 @@ public class ChatRoomController {
 
     @MessageMapping(CHAT_ROOMS + ONE_PATH)
     public void getChatById(
+            @Payload String targetId,
             SimpMessageHeaderAccessor headerAccessor
     ) {
         Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
-                    final String targetId = (String) sessionAttrs.get(TARGET_ID);
                     final ChatRoomDto chatRoomDto = chatRoomService.getById(targetId, user);
 
                     simpMessagingTemplate.convertAndSend(
@@ -78,7 +75,6 @@ public class ChatRoomController {
     }
 
     @MessageMapping(CHAT_ROOMS + UPDATE_PATH)
-    @SendTo("/topic/chat-rooms")
     public void updateById(
             @Payload ChatRoomDto chatRoomDto,
             SimpMessageHeaderAccessor headerAccessor
@@ -86,7 +82,7 @@ public class ChatRoomController {
         final Map<String, Object> sessionAttrs = headerAccessor.getSessionAttributes();
         if (sessionAttrs != null) {
             final CustomUserDetails user = convertFrom(headerAccessor.getUser());
-            final String targetId = (String) sessionAttrs.get(TARGET_ID);
+            final String targetId = chatRoomDto.getId();
 
             simpMessagingTemplate.convertAndSend(
                     String.format(TOPIC_USER_CHAT_ROOMS, user.getUsername()),
@@ -97,21 +93,13 @@ public class ChatRoomController {
 
     @MessageMapping(CHAT_ROOMS + DELETE_PATH)
     public void deleteById(
+            @Payload String targetId,
             SimpMessageHeaderAccessor headerAccessor
     ) {
         final Map<String, Object> sessionAttrs = headerAccessor.getSessionAttributes();
         if (sessionAttrs != null) {
             final CustomUserDetails user = convertFrom(headerAccessor.getUser());
-            final String targetId = (String) sessionAttrs.get(TARGET_ID);
             chatRoomService.deleteById(targetId, user);
         }
     }
-
-    private CustomUserDetails convertFrom(Principal user) {
-        return Objects.requireNonNull(
-                (CustomUserDetails)((UsernamePasswordAuthenticationToken) user).getPrincipal()
-        );
-    }
-
-
 }
