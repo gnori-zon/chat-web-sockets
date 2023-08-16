@@ -4,7 +4,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.gnori.chatwebsockets.api.dto.ChatRoomDto;
-import org.gnori.chatwebsockets.core.service.domain.impl.ChatRoomService;
+import org.gnori.chatwebsockets.core.service.domain.ChatRoomService;
 import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -24,7 +24,7 @@ import static org.gnori.chatwebsockets.core.service.security.util.SecurityUtil.c
 public class ChatRoomController {
 
     SimpMessagingTemplate simpMessagingTemplate;
-    ChatRoomService chatRoomService;
+    ChatRoomService<CustomUserDetails> chatRoomService;
 
     @MessageMapping(CHAT_ROOMS + LIST_PATH)
     public void getForUser(
@@ -43,13 +43,13 @@ public class ChatRoomController {
 
     @MessageMapping(CHAT_ROOMS + ONE_PATH)
     public void getChatById(
-            @Payload String targetId,
+            @Payload String chatRoomId,
             SimpMessageHeaderAccessor headerAccessor
     ) {
         Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
-                    final ChatRoomDto chatRoomDto = chatRoomService.getById(targetId, user);
+                    final ChatRoomDto chatRoomDto = chatRoomService.get(new ChatRoomDto(chatRoomId), user);
 
                     simpMessagingTemplate.convertAndSend(
                             String.format(TOPIC_USER_CHAT_ROOMS, user.getUsername()),
@@ -83,24 +83,23 @@ public class ChatRoomController {
         final Map<String, Object> sessionAttrs = headerAccessor.getSessionAttributes();
         if (sessionAttrs != null) {
             final CustomUserDetails user = convertFrom(headerAccessor.getUser());
-            final String targetId = chatRoomDto.getId();
 
             simpMessagingTemplate.convertAndSend(
                     String.format(TOPIC_USER_CHAT_ROOMS, user.getUsername()),
-                    chatRoomService.updateById(targetId, chatRoomDto, user)
+                    chatRoomService.update(chatRoomDto, user)
             );
         }
     }
 
     @MessageMapping(CHAT_ROOMS + DELETE_PATH)
     public void deleteById(
-            @Payload String targetId,
+            @Payload String chatRoomId,
             SimpMessageHeaderAccessor headerAccessor
     ) {
         final Map<String, Object> sessionAttrs = headerAccessor.getSessionAttributes();
         if (sessionAttrs != null) {
             final CustomUserDetails user = convertFrom(headerAccessor.getUser());
-            chatRoomService.deleteById(targetId, user);
+            chatRoomService.delete(new ChatRoomDto(chatRoomId), user);
         }
     }
 }

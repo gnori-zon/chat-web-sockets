@@ -29,4 +29,8 @@ public class ChatRoomDto implements AbstractDto<String> {
     String description;
 
     List<UserDto> connectedUsers;
+
+    public ChatRoomDto(String id) {
+        this.id = id;
+    }
 }

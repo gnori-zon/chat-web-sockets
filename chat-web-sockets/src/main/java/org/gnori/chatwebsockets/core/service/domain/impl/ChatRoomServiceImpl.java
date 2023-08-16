@@ -1,9 +1,10 @@
 package org.gnori.chatwebsockets.core.service.domain.impl;
 
 import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.apache.commons.collections4.ListUtils;
-import org.gnori.chatwebsockets.api.converter.ChatRoomConverter;
+import org.gnori.chatwebsockets.api.converter.impl.ChatRoomConverter;
 import org.gnori.chatwebsockets.api.dto.ChatRoomDto;
 import org.gnori.chatwebsockets.core.domain.chat.ChatRoom;
 import org.gnori.chatwebsockets.core.domain.user.User;
@@ -11,7 +12,7 @@ import org.gnori.chatwebsockets.core.exception.impl.ForbiddenException;
 import org.gnori.chatwebsockets.core.exception.impl.NotFoundException;
 import org.gnori.chatwebsockets.core.repository.ChatRoomRepository;
 import org.gnori.chatwebsockets.core.repository.UserRepository;
-import org.gnori.chatwebsockets.core.service.domain.BaseService;
+import org.gnori.chatwebsockets.core.service.domain.ChatRoomService;
 import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
 import org.springframework.stereotype.Service;
 
@@ -20,15 +21,13 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @Service
+@RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class ChatRoomService extends BaseService<ChatRoom, String, ChatRoomDto, ChatRoomConverter, ChatRoomRepository> {
+public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
 
+    ChatRoomConverter converter;
+    ChatRoomRepository repository;
     UserRepository userRepository;
-
-    public ChatRoomService(ChatRoomConverter converter, ChatRoomRepository repository, UserRepository userRepository) {
-        super(converter, repository);
-        this.userRepository = userRepository;
-    }
 
     @Override
     public List<ChatRoomDto> getAll(CustomUserDetails user) {
@@ -42,21 +41,23 @@ public class ChatRoomService extends BaseService<ChatRoom, String, ChatRoomDto, 
     }
 
     @Override
-    public ChatRoomDto getById(String chatRoomId, CustomUserDetails user) {
+    public ChatRoomDto get(ChatRoomDto dto, CustomUserDetails user) {
+        final String chatRoomId = dto.getId();
         if (userRepository.hasChatRoomId(user.getUsername(), chatRoomId)) {
-            return super.getById(chatRoomId, user);
+            return converter.convertFrom(getChatRoomOrElseThrow(chatRoomId));
         }
         throw new ForbiddenException();
     }
 
     @Override
-    public void deleteById(String chatRoomId, CustomUserDetails user) {
+    public ChatRoomDto delete(ChatRoomDto dto, CustomUserDetails user) {
+        final String chatRoomId = dto.getId();
         final Optional<ChatRoom> optionalChatRoom = repository.findById(chatRoomId);
         if (optionalChatRoom.isPresent()) {
             final ChatRoom chatRoom = optionalChatRoom.get();
             if (user.getUsername().equals(chatRoom.getOwnerUsername())) {
                 repository.deleteById(chatRoomId);
-                return;
+                return null;
             }
         }
         throw new ForbiddenException();
@@ -75,7 +76,8 @@ public class ChatRoomService extends BaseService<ChatRoom, String, ChatRoomDto, 
     }
 
     @Override
-    public ChatRoomDto updateById(String chatRoomId, ChatRoomDto dto, CustomUserDetails user) {
+    public ChatRoomDto update(ChatRoomDto dto, CustomUserDetails user) {
+        final String chatRoomId = dto.getId();
         final Optional<ChatRoom> optionalChatRoom = repository.findById(chatRoomId);
         if (optionalChatRoom.isPresent()) {
             final ChatRoom chatRoom = optionalChatRoom.get();
@@ -90,6 +92,7 @@ public class ChatRoomService extends BaseService<ChatRoom, String, ChatRoomDto, 
         throw new ForbiddenException();
     }
 
+    @Override
     public ChatRoomDto deleteUser(String chatRoomId, String username, CustomUserDetails user) {
         final ChatRoom chatRoom = getChatRoomOrElseThrow(chatRoomId);
 
@@ -104,6 +107,7 @@ public class ChatRoomService extends BaseService<ChatRoom, String, ChatRoomDto, 
         throw new ForbiddenException();
     }
 
+    @Override
     public ChatRoomDto addUser(String chatRoomId, String username, CustomUserDetails user) {
         ChatRoom chatRoom = getChatRoomOrElseThrow(chatRoomId);
 

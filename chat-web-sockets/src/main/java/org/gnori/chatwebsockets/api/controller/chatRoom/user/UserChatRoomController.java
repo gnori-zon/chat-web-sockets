@@ -3,7 +3,7 @@ package org.gnori.chatwebsockets.api.controller.chatroom.user;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.gnori.chatwebsockets.core.service.domain.impl.ChatRoomService;
+import org.gnori.chatwebsockets.core.service.domain.ChatRoomService;
 import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -25,7 +25,7 @@ import static org.gnori.chatwebsockets.core.service.security.util.SecurityUtil.c
 public class UserChatRoomController {
 
     SimpMessagingTemplate simpMessagingTemplate;
-    ChatRoomService chatRoomService;
+    ChatRoomService<CustomUserDetails> chatRoomService;
 
     @MessageMapping(USERS + ADD_PATH)
     public void addUser(

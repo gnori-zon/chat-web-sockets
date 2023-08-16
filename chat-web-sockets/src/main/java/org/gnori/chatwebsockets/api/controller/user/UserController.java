@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.gnori.chatwebsockets.api.controller.user.payload.UserPayload;
 import org.gnori.chatwebsockets.api.dto.UserDto;
-import org.gnori.chatwebsockets.core.service.domain.impl.UserService;
+import org.gnori.chatwebsockets.core.service.domain.UserService;
 import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -24,7 +24,7 @@ import static org.gnori.chatwebsockets.core.service.security.util.SecurityUtil.c
 public class UserController {
 
     SimpMessagingTemplate simpMessagingTemplate;
-    UserService userService;
+    UserService<CustomUserDetails> userService;
 
     @MessageMapping(USERS + CREATE_PATH)
     public void create(
@@ -46,8 +46,7 @@ public class UserController {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     simpMessagingTemplate.convertAndSend(
                             String.format(TOPIC_USER, user.getUsername()),
-                            userService.updateById(
-                                    user.getUser().getId(),
+                            userService.update(
                                     new UserDto(null, payload.getUsername(), payload.getName(), payload.getEmail()),
                                     user
                             )
@@ -82,7 +81,7 @@ public class UserController {
         Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
-                    userService.deleteById(user.getUser().getId(), user);
+                    userService.delete(user);
                 }
         );
     }

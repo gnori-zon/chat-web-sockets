@@ -1,5 +1,6 @@
-package org.gnori.chatwebsockets.api.converter;
+package org.gnori.chatwebsockets.api.converter.impl;
 
+import org.gnori.chatwebsockets.api.converter.AbstractConverter;
 import org.gnori.chatwebsockets.api.dto.ChatRoomDto;
 import org.gnori.chatwebsockets.api.dto.UserDto;
 import org.gnori.chatwebsockets.core.domain.chat.ChatRoom;

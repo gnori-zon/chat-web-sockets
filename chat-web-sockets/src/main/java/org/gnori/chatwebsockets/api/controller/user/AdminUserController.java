@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.gnori.chatwebsockets.api.controller.user.payload.AdminUserPayload;
 import org.gnori.chatwebsockets.core.domain.user.enums.Role;
-import org.gnori.chatwebsockets.core.service.domain.impl.UserService;
+import org.gnori.chatwebsockets.core.service.domain.UserService;
 import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -24,7 +24,7 @@ import static org.gnori.chatwebsockets.core.service.security.util.SecurityUtil.c
 public class AdminUserController {
 
     SimpMessagingTemplate simpMessagingTemplate;
-    UserService userService;
+    UserService<CustomUserDetails> userService;
 
     @MessageMapping(ADMIN_USERS + CREATE_PATH)
     public void create(
@@ -71,7 +71,7 @@ public class AdminUserController {
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     if (user.getUser().getRoles().contains(Role.ADMIN)) {
-                        userService.deleteById(id, user);
+                        userService.delete(user);
                     }
                 }
         );
