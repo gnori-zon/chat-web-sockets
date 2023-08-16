@@ -1,10 +1,11 @@
-package org.gnori.chatwebsockets.api.controller.user;
+package org.gnori.chatwebsockets.api.controller.user.admin;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.gnori.chatwebsockets.api.controller.user.payload.UserPayload;
-import org.gnori.chatwebsockets.api.dto.UserDto;
+import org.gnori.chatwebsockets.api.controller.user.admin.payload.CreateAdminUserPayload;
+import org.gnori.chatwebsockets.api.controller.user.admin.payload.UpdateAdminUserPayload;
+import org.gnori.chatwebsockets.core.domain.user.enums.Role;
 import org.gnori.chatwebsockets.core.service.domain.UserService;
 import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -21,67 +22,58 @@ import static org.gnori.chatwebsockets.core.service.security.util.SecurityUtil.c
 @RestController
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class UserController {
+public class AdminUserController {
 
     SimpMessagingTemplate simpMessagingTemplate;
     UserService<CustomUserDetails> userService;
 
-    @MessageMapping(USERS + CREATE_PATH)
+    @MessageMapping(ADMIN_USERS + CREATE_PATH)
     public void create(
-            @Payload UserPayload payload
+            @Payload CreateAdminUserPayload payload,
+            SimpMessageHeaderAccessor headerAccessor
     ) {
-        simpMessagingTemplate.convertAndSend(
-                String.format(TOPIC_USER, payload.getUsername()),
-                userService.create(payload)
+        Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
+                sessionAttrs -> {
+                    final CustomUserDetails user = convertFrom(headerAccessor.getUser());
+                    if (user.getUser().getRoles().contains(Role.ADMIN)) {
+                        simpMessagingTemplate.convertAndSend(
+                                String.format(TOPIC_ADMIN_USER, user.getUsername()),
+                                userService.adminCreate(payload)
+                        );
+                    }
+                }
         );
     }
 
-    @MessageMapping(USERS + UPDATE_PATH)
+    @MessageMapping(ADMIN_USERS + UPDATE_PATH)
     public void update(
-            @Payload UserPayload payload,
+            @Payload UpdateAdminUserPayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
         Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
-                    simpMessagingTemplate.convertAndSend(
-                            String.format(TOPIC_USER, user.getUsername()),
-                            userService.update(
-                                    new UserDto(null, payload.getUsername(), payload.getName(), payload.getEmail()),
-                                    user
-                            )
-                    );
+                    if (user.getUser().getRoles().contains(Role.ADMIN)) {
+                        simpMessagingTemplate.convertAndSend(
+                                String.format(TOPIC_ADMIN_USER, user.getUsername()),
+                                userService.adminUpdateById(payload)
+                        );
+                    }
                 }
         );
     }
 
-    @MessageMapping(USERS + CHANGE_PASS_PATH)
-    public void changePassword(
-            @Payload UserPayload payload,
-            SimpMessageHeaderAccessor headerAccessor
-    ) {
-        Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
-                sessionAttrs -> {
-                    final CustomUserDetails user = convertFrom(headerAccessor.getUser());
-                    simpMessagingTemplate.convertAndSend(
-                            String.format(TOPIC_USER, user.getUsername()),
-                            userService.changePassword(
-                                    payload,
-                                    user
-                            )
-                    );
-                }
-        );
-    }
-
-    @MessageMapping(USERS + DELETE_PATH)
+    @MessageMapping(ADMIN_USERS + DELETE_PATH)
     public void delete(
+            @Payload Long id,
             SimpMessageHeaderAccessor headerAccessor
     ) {
         Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
-                    userService.delete(user);
+                    if (user.getUser().getRoles().contains(Role.ADMIN)) {
+                        userService.adminDelete(id);
+                    }
                 }
         );
     }

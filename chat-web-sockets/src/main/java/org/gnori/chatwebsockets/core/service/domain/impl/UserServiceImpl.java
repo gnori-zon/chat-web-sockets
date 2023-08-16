@@ -3,8 +3,11 @@ package org.gnori.chatwebsockets.core.service.domain.impl;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.gnori.chatwebsockets.api.controller.user.payload.AdminUserPayload;
+import org.gnori.chatwebsockets.api.controller.user.admin.payload.CreateAdminUserPayload;
+import org.gnori.chatwebsockets.api.controller.user.admin.payload.UpdateAdminUserPayload;
 import org.gnori.chatwebsockets.api.controller.user.payload.UserPayload;
+import org.gnori.chatwebsockets.api.controller.user.user.payload.ChangePasswordUserPayload;
+import org.gnori.chatwebsockets.api.controller.user.user.payload.CreateUserPayload;
 import org.gnori.chatwebsockets.api.converter.impl.UserConverter;
 import org.gnori.chatwebsockets.api.dto.UserDto;
 import org.gnori.chatwebsockets.core.domain.user.User;
@@ -31,17 +34,10 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
     UserConverter converter;
 
     @Override
-    public UserDto create(UserPayload payload) {
+    public UserDto create(CreateUserPayload payload) {
         if (repository.existsByUsername(payload.getUsername())) throw new ConflictException(EXIST_USERNAME_EX);
 
-        final User userEntity = new User(
-                payload.getUsername(),
-                bCryptPasswordEncoder.encode(payload.getNewPassword()),
-                payload.getName(),
-                payload.getEmail(),
-                null, null
-        );
-        userEntity.setRoles(List.of(Role.USER));
+        final User userEntity = createFrom(payload);
 
         return converter.convertFrom(
                 repository.save(userEntity)
@@ -49,17 +45,17 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
     }
 
     @Override
-    public UserDto update(UserDto dto, CustomUserDetails user) {
-        if (isNewUsernameAndSomeoneElseHasIt(dto.getUsername(), user.getUsername())) throw new ConflictException(EXIST_USERNAME_EX);
+    public UserDto update(UserPayload payload, CustomUserDetails user) {
+        if (isNewUsernameAndSomeoneElseHasIt(payload.getUsername(), user.getUsername())) throw new ConflictException(EXIST_USERNAME_EX);
         final User userEntity = user.getUser();
-        userEntity.setName(dto.getName());
-        userEntity.setUsername(dto.getUsername());
-        userEntity.setEmail(dto.getEmail());
+        userEntity.setName(payload.getName());
+        userEntity.setUsername(payload.getUsername());
+        userEntity.setEmail(payload.getEmail());
         return converter.convertFrom(repository.save(userEntity));
     }
 
     @Override
-    public UserDto changePassword(UserPayload payload, CustomUserDetails user) {
+    public UserDto changePassword(ChangePasswordUserPayload payload, CustomUserDetails user) {
         if (isNotValidOldPass(payload, user)) throw new ConflictException("Not valid old password");
         final User userEntity = user.getUser();
         userEntity.setPassword(bCryptPasswordEncoder.encode(payload.getNewPassword()));
@@ -67,20 +63,21 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
     }
 
     @Override
-    public UserDto adminUpdateById(AdminUserPayload payload) {
+    public UserDto adminUpdateById(UpdateAdminUserPayload payload) {
         final User oldUserEntity = repository.findById(payload.getId()).orElseThrow(NotFoundException::new);
-        if (isNewUsernameAndSomeoneElseHasIt(payload.getUserPayload().getUsername(), oldUserEntity.getUsername())) throw new ConflictException(EXIST_USERNAME_EX);
+        if (isNewUsernameAndSomeoneElseHasIt(payload.getUsername(), oldUserEntity.getUsername())) throw new ConflictException(EXIST_USERNAME_EX);
 
-        final User newUserEntity = createFrom(payload);
-        newUserEntity.setChatIds(oldUserEntity.getChatIds());
-        newUserEntity.setId(oldUserEntity.getId());
+        oldUserEntity.setUsername(payload.getUsername());
+        oldUserEntity.setName(payload.getName());
+        oldUserEntity.setEmail(payload.getEmail());
+        oldUserEntity.setRoles(payload.getRoleList());
 
-        return converter.convertFrom(repository.save(newUserEntity));
+        return converter.convertFrom(repository.save(oldUserEntity));
     }
 
     @Override
-    public UserDto adminCreate(AdminUserPayload payload) {
-        if (repository.existsByUsername(payload.getUserPayload().getUsername())) throw new ConflictException(EXIST_USERNAME_EX);
+    public UserDto adminCreate(CreateAdminUserPayload payload) {
+        if (repository.existsByUsername(payload.getUsername())) throw new ConflictException(EXIST_USERNAME_EX);
         final User newUserEntity = createFrom(payload);
         return converter.convertFrom(repository.save(newUserEntity));
     }
@@ -90,22 +87,40 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
         repository.delete(user.getUser());
     }
 
+    @Override
+    public void adminDelete(Long id) {
+        repository.deleteById(id);
+    }
+
     private boolean isNewUsernameAndSomeoneElseHasIt(String dtoUsername, String username) {
         return !dtoUsername.equals(username) && repository.existsByUsername(dtoUsername);
     }
 
-    private boolean isNotValidOldPass(UserPayload payload, CustomUserDetails user) {
+    private boolean isNotValidOldPass(ChangePasswordUserPayload payload, CustomUserDetails user) {
         return !bCryptPasswordEncoder.encode(payload.getOldPassword()).equals(user.getPassword());
     }
 
-    private User createFrom(AdminUserPayload payload) {
+    private User createFrom(CreateAdminUserPayload payload) {
+        final User user = createFrom(payload.getUsername(), payload.getPassword(), payload.getName(), payload.getEmail());
+        user.setRoles(payload.getRoleList());
+        return user;
+    }
+
+    private User createFrom(CreateUserPayload payload) {
+        final User user = createFrom(payload.getUsername(), payload.getPassword(), payload.getName(), payload.getEmail());
+        user.setRoles(List.of(Role.USER));
+        return user;
+    }
+
+    private User createFrom(String username, String password, String name, String email) {
+
         return new User(
-                payload.getUserPayload().getUsername(),
-                bCryptPasswordEncoder.encode(payload.getUserPayload().getNewPassword()),
-                payload.getUserPayload().getName(),
-                payload.getUserPayload().getEmail(),
-                payload.getRoleList(),
-                null
+                username,
+                bCryptPasswordEncoder.encode(password),
+                name,
+                email,
+                null, null
         );
     }
+
 }

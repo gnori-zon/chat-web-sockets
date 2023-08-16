@@ -1,15 +1,13 @@
-package org.gnori.chatwebsockets.api.controller.user.payload;
+package org.gnori.chatwebsockets.api.controller.user.admin.payload;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-@Setter
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PROTECTED)
-public class UserPayload {
-    String username;
-    String name;
-    String email;
+public class UpdateAdminUserPayload extends AdminUserPayload {
+    Long id;
 }
