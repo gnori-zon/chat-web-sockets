@@ -12,7 +12,6 @@ public class MessageConverter implements AbstractConverter<MessageDto, Message> 
         return new Message(
                 dto.getId(),
                 dto.getFromUser(),
-                dto.getToUser(),
                 dto.getText()
         );
     }
@@ -22,7 +21,6 @@ public class MessageConverter implements AbstractConverter<MessageDto, Message> 
         return new MessageDto(
                 entity.getKey(),
                 entity.getFromUser(),
-                entity.getToUser(),
                 entity.getText()
         );
     }

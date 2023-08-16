@@ -13,7 +13,6 @@ public class MessageDto implements AbstractDto<MessagePrimaryKey> {
 
     MessagePrimaryKey messagePrimaryKey;
     String fromUser;
-    String toUser;
     String text;
 
     @Override

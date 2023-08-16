@@ -22,10 +22,6 @@ public class Message {
     @CassandraType(type = CassandraType.Name.TEXT)
     String fromUser;
 
-    @Column("to_user")
-    @CassandraType(type = CassandraType.Name.TEXT)
-    String toUser;
-
     @Column("text")
     @CassandraType(type = CassandraType.Name.TEXT)
     String text;

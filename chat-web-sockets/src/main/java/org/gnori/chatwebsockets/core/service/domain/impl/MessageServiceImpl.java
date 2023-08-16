@@ -3,6 +3,9 @@ package org.gnori.chatwebsockets.core.service.domain.impl;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.gnori.chatwebsockets.api.controller.message.payload.CreateMessagePayload;
+import org.gnori.chatwebsockets.api.controller.message.payload.MessagePayload;
+import org.gnori.chatwebsockets.api.controller.message.payload.UpdateMessagePayload;
 import org.gnori.chatwebsockets.api.converter.impl.MessageConverter;
 import org.gnori.chatwebsockets.api.dto.MessageDto;
 import org.gnori.chatwebsockets.core.domain.chat.ChatRoom;
@@ -28,63 +31,70 @@ public class MessageServiceImpl implements MessageService<CustomUserDetails> {
     ChatRoomRepository chatRoomRepository;
 
     @Override
-    public List<MessageDto> getAll(MessageDto dto, CustomUserDetails user) {
-        final String chatRoomId = dto.getMessagePrimaryKey().getChatRoomId();
+    public List<MessageDto> getAll(MessagePayload payload, CustomUserDetails user) {
+        final String chatRoomId = payload.getChatRoomId();
         if (user.getUser().getChatIds().contains(chatRoomId)) {
-            final String chatRoomIdFormMessage = dto.getMessagePrimaryKey().getChatRoomId();
-            final String usernameFromMessage = dto.getId().getUsername();
+            final String usernameFromMessage = payload.getFromUser();
 
             return converter.convertAll(repository.findAllById(
-                    List.of(MessagePrimaryKey.of(chatRoomIdFormMessage, usernameFromMessage))));
+                    List.of(MessagePrimaryKey.of(chatRoomId, usernameFromMessage))));
         }
         throw new ForbiddenException();
     }
 
     @Override
-    public MessageDto get(MessageDto dto, CustomUserDetails user) {
-        final String chatRoomId = dto.getMessagePrimaryKey().getChatRoomId();
+    public MessageDto get(MessagePayload payload, CustomUserDetails user) {
+        final String chatRoomId = payload.getChatRoomId();
         if (user.getUser().getChatIds().contains(chatRoomId)) {
+            final MessagePrimaryKey primaryKey = new MessagePrimaryKey(payload.getFromUser(), payload.getChatRoomId(), payload.getDate());
+
             return converter.convertFrom(
-                    getMessageOrElseThrow(dto.getMessagePrimaryKey())
+                    getMessageOrElseThrow(primaryKey)
             );
         }
         throw new ForbiddenException();
     }
 
     @Override
-    public MessageDto delete(MessageDto dto, CustomUserDetails user) {
-        final String chatRoomId = dto.getMessagePrimaryKey().getChatRoomId();
+    public MessageDto delete(MessagePayload payload, CustomUserDetails user) {
+        final String chatRoomId = payload.getChatRoomId();
         if (user.getUser().getChatIds().contains(chatRoomId)) {
-            if (dto.getFromUser().equals(user.getUsername()) || isOwnerChatRoom(chatRoomId, user)) {
-                repository.deleteById(MessagePrimaryKey.of(dto.getMessagePrimaryKey()));
+            if (user.getUsername().equals(payload.getFromUser()) || isOwnerChatRoom(chatRoomId, user)) {
+                final MessagePrimaryKey primaryKey = new MessagePrimaryKey(payload.getFromUser(), payload.getChatRoomId(), payload.getDate());
 
-                return dto;
+                repository.deleteById(MessagePrimaryKey.of(primaryKey));
+
+                return new MessageDto(primaryKey, null, null);
             }
         }
         throw new ForbiddenException();
     }
 
     @Override
-    public MessageDto create(MessageDto dto, CustomUserDetails user) {
-        final String chatRoomId = dto.getMessagePrimaryKey().getChatRoomId();
+    public MessageDto create(CreateMessagePayload payload, CustomUserDetails user) {
+        final String chatRoomId = payload.getChatRoomId();
         if (user.getUser().getChatIds().contains(chatRoomId)) {
-            dto.getMessagePrimaryKey().setUsername(user.getUsername());
-            dto.setFromUser(user.getUsername());
+            final Message message = new Message(
+                    new MessagePrimaryKey(payload.getFromUser(), payload.getChatRoomId(), payload.getDate()),
+                    user.getUsername(),
+                    payload.getText()
+            );
 
             return converter.convertFrom(
-                    repository.save(converter.convertFrom(dto))
+                    repository.save(message)
             );
         }
         throw new ForbiddenException();
     }
 
     @Override
-    public MessageDto update(MessageDto dto, CustomUserDetails user) {
-        final String chatRoomId = dto.getMessagePrimaryKey().getChatRoomId();
+    public MessageDto update(UpdateMessagePayload payload, CustomUserDetails user) {
+        final String chatRoomId = payload.getChatRoomId();
         if (user.getUser().getChatIds().contains(chatRoomId)) {
-            final Message message = getMessageOrElseThrow(dto.getMessagePrimaryKey());
-            message.setFromUser(user.getUsername());
-            message.setText(dto.getText());
+            final MessagePrimaryKey primaryKey = new MessagePrimaryKey(payload.getFromUser(), payload.getChatRoomId(), payload.getDate());
+            final Message message = getMessageOrElseThrow(primaryKey);
+            message.setFromUser(payload.getFromUser());
+            message.setText(payload.getText());
 
             return converter.convertFrom(repository.save(message));
         }

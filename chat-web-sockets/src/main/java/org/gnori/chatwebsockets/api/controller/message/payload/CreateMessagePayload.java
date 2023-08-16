@@ -3,11 +3,11 @@ package org.gnori.chatwebsockets.api.controller.message.payload;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-@Setter
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PROTECTED)
-public class NewMessagePayload extends MessagePayload {
+public class CreateMessagePayload extends MessagePayload {
     String text;
 }

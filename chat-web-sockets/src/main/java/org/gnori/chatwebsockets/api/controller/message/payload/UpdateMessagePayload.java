@@ -3,15 +3,11 @@ package org.gnori.chatwebsockets.api.controller.message.payload;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDateTime;
-
-@Getter
 @Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PROTECTED)
-public class MessagePayload {
-    String chatRoomId;
-    LocalDateTime date;
-    String fromUser;
+public class UpdateMessagePayload extends MessagePayload {
+    String text;
 }
