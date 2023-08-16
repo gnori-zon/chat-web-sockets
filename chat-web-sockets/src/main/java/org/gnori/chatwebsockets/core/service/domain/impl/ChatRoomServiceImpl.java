@@ -4,6 +4,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.apache.commons.collections4.ListUtils;
+import org.gnori.chatwebsockets.api.controller.chatroom.payload.ChatRoomPayload;
+import org.gnori.chatwebsockets.api.controller.chatroom.payload.CreateChatRoomPayload;
+import org.gnori.chatwebsockets.api.controller.chatroom.payload.UpdateChatRoomPayload;
+import org.gnori.chatwebsockets.api.controller.chatroom.user.UserChatRoomPayload;
 import org.gnori.chatwebsockets.api.converter.impl.ChatRoomConverter;
 import org.gnori.chatwebsockets.api.dto.ChatRoomDto;
 import org.gnori.chatwebsockets.core.domain.chat.ChatRoom;
@@ -41,8 +45,8 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
     }
 
     @Override
-    public ChatRoomDto get(ChatRoomDto dto, CustomUserDetails user) {
-        final String chatRoomId = dto.getId();
+    public ChatRoomDto get(ChatRoomPayload payload, CustomUserDetails user) {
+        final String chatRoomId = payload.getChatRoomId();
         if (userRepository.hasChatRoomId(user.getUsername(), chatRoomId)) {
             return converter.convertFrom(getChatRoomOrElseThrow(chatRoomId));
         }
@@ -50,8 +54,8 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
     }
 
     @Override
-    public ChatRoomDto delete(ChatRoomDto dto, CustomUserDetails user) {
-        final String chatRoomId = dto.getId();
+    public ChatRoomDto delete(ChatRoomPayload payload, CustomUserDetails user) {
+        final String chatRoomId = payload.getChatRoomId();
         final Optional<ChatRoom> optionalChatRoom = repository.findById(chatRoomId);
         if (optionalChatRoom.isPresent()) {
             final ChatRoom chatRoom = optionalChatRoom.get();
@@ -64,10 +68,14 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
     }
 
     @Override
-    public ChatRoomDto create(ChatRoomDto dto, CustomUserDetails user) {
-        ChatRoom chatRoom = converter.convertFrom(dto);
-        chatRoom.setConnectedUsers(Collections.singletonList(user.getUser()));
-        chatRoom.setOwnerUsername(user.getUsername());
+    public ChatRoomDto create(CreateChatRoomPayload payload, CustomUserDetails user) {
+        ChatRoom chatRoom = new ChatRoom(
+                null,
+                payload.getName(),
+                payload.getDescription(),
+                user.getUsername(),
+                List.of(user.getUser())
+        );
 
         chatRoom = repository.save(chatRoom);
         userRepository.addChatRoomId(user.getUsername(), chatRoom.getId());
@@ -76,14 +84,14 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
     }
 
     @Override
-    public ChatRoomDto update(ChatRoomDto dto, CustomUserDetails user) {
-        final String chatRoomId = dto.getId();
+    public ChatRoomDto update(UpdateChatRoomPayload payload, CustomUserDetails user) {
+        final String chatRoomId = payload.getChatRoomId();
         final Optional<ChatRoom> optionalChatRoom = repository.findById(chatRoomId);
         if (optionalChatRoom.isPresent()) {
             final ChatRoom chatRoom = optionalChatRoom.get();
             if (user.getUsername().equals(chatRoom.getOwnerUsername())) {
-                chatRoom.setName(dto.getName());
-                chatRoom.setDescription(dto.getDescription());
+                chatRoom.setName(payload.getName());
+                chatRoom.setDescription(payload.getDescription());
                 return converter.convertFrom(
                         repository.save(chatRoom)
                 );
@@ -93,7 +101,9 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
     }
 
     @Override
-    public ChatRoomDto deleteUser(String chatRoomId, String username, CustomUserDetails user) {
+    public ChatRoomDto deleteUser(UserChatRoomPayload payload, CustomUserDetails user) {
+        final String chatRoomId = payload.getChatRoomId();
+        final String username = payload.getUsername();
         final ChatRoom chatRoom = getChatRoomOrElseThrow(chatRoomId);
 
         if (user.getUsername().equals(chatRoom.getOwnerUsername()) && !user.getUsername().equals(username)) {
@@ -108,7 +118,9 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
     }
 
     @Override
-    public ChatRoomDto addUser(String chatRoomId, String username, CustomUserDetails user) {
+    public ChatRoomDto addUser(UserChatRoomPayload payload, CustomUserDetails user) {
+        final String chatRoomId = payload.getChatRoomId();
+        final String username = payload.getUsername();
         ChatRoom chatRoom = getChatRoomOrElseThrow(chatRoomId);
 
         if (user.getUsername().equals(chatRoom.getOwnerUsername())) {

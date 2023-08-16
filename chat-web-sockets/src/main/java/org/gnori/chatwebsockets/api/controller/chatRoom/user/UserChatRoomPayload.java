@@ -1,16 +1,14 @@
 package org.gnori.chatwebsockets.api.controller.chatroom.user;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.gnori.chatwebsockets.api.controller.chatroom.payload.ChatRoomPayload;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserChatRoomPayload {
-    String targetId;
+@FieldDefaults(level = AccessLevel.PROTECTED)
+public class UserChatRoomPayload extends ChatRoomPayload {
     String username;
 }

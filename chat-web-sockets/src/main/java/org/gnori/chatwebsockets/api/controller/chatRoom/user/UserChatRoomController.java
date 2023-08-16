@@ -37,7 +37,7 @@ public class UserChatRoomController {
             final CustomUserDetails user = convertFrom(headerAccessor.getUser());
             simpMessagingTemplate.convertAndSend(
                     String.format(TOPIC_USER_CHAT_ROOMS, user.getUsername()),
-                    chatRoomService.addUser(payload.getTargetId(), payload.getUsername(), user)
+                    chatRoomService.addUser(payload, user)
             );
         }
     }
@@ -52,7 +52,7 @@ public class UserChatRoomController {
             final CustomUserDetails user = convertFrom(headerAccessor.getUser());
             simpMessagingTemplate.convertAndSend(
                     String.format(TOPIC_USER_CHAT_ROOMS, user.getUsername()),
-                    chatRoomService.deleteUser(payload.getTargetId(), payload.getUsername(), user)
+                    chatRoomService.deleteUser(payload, user)
             );
         }
     }

@@ -1,8 +1,6 @@
 package org.gnori.chatwebsockets.core.domain.chat;
 
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.gnori.chatwebsockets.core.domain.user.User;
 import org.springframework.data.annotation.Id;
@@ -13,6 +11,8 @@ import java.util.List;
 
 @Setter
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 @RedisHash("chat_rooms")
 @FieldDefaults(level = AccessLevel.PROTECTED)
 public class ChatRoom implements Serializable {
