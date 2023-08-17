@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>chat-web-sockets</title>
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+
+<body>
+
+<div id="main-page">
+    <h1 class="title">chat-web-sockets</h1>
+    <h2 class="section-title">Choose and start chatting</h2>
+    <div class="main-choose-entry">
+        <form id="chooseLoginForm" name="chooseLoginForm">
+            <div class="form-group">
+                <button type="submit" class="accent username-submit">sign in</button>
+            </div>
+        </form>
+        <form id="chooseRegistrationForm" name="chooseRegistrationForm">
+            <div class="form-group">
+                <button type="submit" class="accent username-submit">sign up</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="registration-page" class="hidden">
+    <div class="registration-page-container">
+        <h1 class="title">Sign Up</h1>
+        <h2 class="section-title">Type your data</h2>
+        <form id="registrationForm" name="registrationForm">
+            <div class="form-group">
+                <input type="text" id="username-reg" placeholder="username..." autocomplete="off" class="form-control"/>
+            </div>
+            <div class="form-group">
+                <input type="text" id="name-reg" placeholder="name..." autocomplete="off" class="form-control"/>
+            </div>
+            <div class="form-group">
+                <input type="email" id="email-reg" placeholder="email..." autocomplete="off" class="form-control"/>
+            </div>
+            <div class="form-group">
+                <input type="password" id="password-reg-1" placeholder="password..." autocomplete="off"
+                       class="form-control"/>
+            </div>
+            <div class="form-group">
+                <input type="password" id="password-reg-2" placeholder="repeat password..." autocomplete="off"
+                       class="form-control"/>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="accent reg-submit">sign up</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div id="login-page" class="hidden">
+    <div class="login-page-container">
+        <h1 class="title">Sign In</h1>
+        <h2 class="section-title">Type your data</h2>
+        <form id="loginForm" name="loginForm">
+            <div class="form-group">
+                <input type="text" id="username-log" placeholder="username..." autocomplete="off" class="form-control"/>
+            </div>
+            <div>
+                <input type="password" id="password-log" placeholder="password..." autocomplete="off"
+                       class="form-control"/>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="accent log-submit">sign in</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.2/stomp.min.js"></script>
+<script src="/js/main.js"></script>
+</body>
+</html>
