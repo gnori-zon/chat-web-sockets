@@ -1,5 +1,116 @@
 'use strict';
 
+let HOST = 'http://localhost:8080';
+var currentUser = null
+
+// choose sign-in or sign-up
+var choosePage = document.querySelector("#main-page")
+var loginPage = document.querySelector("#login-page")
+var registrationPage = document.querySelector("#registration-page")
+
+var chooseLoginForm = document.querySelector('#chooseLoginForm');
+var chooseRegistrationForm = document.querySelector('#chooseRegistrationForm');
+
+function chooseLogin(event) {
+    choosePage.classList.add('hidden');
+    loginPage.classList.remove('hidden');
+    event.preventDefault();
+}
+
+function chooseRegistration(event) {
+    choosePage.classList.add('hidden');
+    registrationPage.classList.remove('hidden');
+    event.preventDefault();
+}
+
+chooseLoginForm.addEventListener('submit', chooseLogin, true)
+chooseRegistrationForm.addEventListener('submit', chooseRegistration, true)
+
+//sign-in
+function loginRequest(username, password) {
+    fetch(HOST + "/users:sign-in", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+        },
+        body: new URLSearchParams ({
+            'username' : username,
+            'password' : password
+        })
+    })
+        .then(response => {
+            currentUser = response.body;
+            console.log(response.status)
+            if (response.redirected) {
+                window.location.href = response.url;
+            }
+        })
+        .catch(err => console.log(err))
+}
+
+var loginForm = document.querySelector('#loginForm');
+var password = null
+var username = null
+
+function login(event) {
+    username = document.querySelector('#username-log').value.trim();
+    password = document.querySelector('#password-log').value.trim();
+
+    if (username && password) {
+        loginRequest(username, password)
+        username = null
+        password = null
+        event.preventDefault();
+    }
+}
+
+loginForm.addEventListener('submit', login, true)
+
+//sign-up
+var registrationForm = document.querySelector('#registrationForm');
+var password2 = null
+var email = null
+var name = null
+
+function registrate(event) {
+    username = document.querySelector('#username-reg').value.trim();
+    password = document.querySelector('#password-reg-1').value.trim();
+    password2 = document.querySelector('#password-reg-2').value.trim()
+    email = document.querySelector('#email-reg').value.trim()
+    name = document.querySelector('#name-reg').value.trim()
+
+    if (username && password && password === password2 && email && name) {
+        let data = {
+            username: username,
+            password: password,
+            email: email,
+            name: name
+        };
+
+        fetch((HOST + '/users:sign-up'), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        }).then(response => {
+            loginRequest(data.username, data.password)
+            password2 = null;
+            password = null;
+            username = null;
+            email = null;
+            name = null;
+            console.log(response.status)
+        })
+            .catch(err => console.log(err))
+
+        event.preventDefault();
+    }
+}
+
+registrationForm.addEventListener('submit', registrate, true)
+
+//todo: write impl main logic
 var usernamePage = document.querySelector('#username-page');
 var chatPage = document.querySelector('#chat-page');
 var usernameForm = document.querySelector('#usernameForm');
@@ -41,7 +152,7 @@ function connect(event) {
 
 function onConnected() {
     stompClient.subscribe('/topic/public', onMessageReceived);
-    stompClient.subscribe(('/topic/'+ username +'/chat-rooms'), onChatRoomReceived);
+    stompClient.subscribe(('/topic/' + username + '/chat-rooms'), onChatRoomReceived);
     //
     stompClient.send("/app/chat/user:add", {}, JSON.stringify({fromUser: username, text: 'hello'}))
     //put username and get all chats
@@ -53,7 +164,7 @@ function onConnected() {
 
 function onError(error) {
     connectingElement.textContent = 'Could not connect to WebSocket server. Please refresh this page to try again!';
-    connectingElement.style.color = 'red';
+    connectingElement.style.color = 'red' + error.toString();
 }
 
 

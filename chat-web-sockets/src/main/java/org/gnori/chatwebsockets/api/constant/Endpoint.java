@@ -6,6 +6,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Endpoint {
 
+    public static final String START_PAGE_PATH = "/";
+    public static final String MAIN_PAGE_PATH = "/main";
+    public static final String LOGOUT_PATH = "/main";
+
     public static final String ADD_PATH = ":add";
     public static final String CREATE_PATH = ":create";
     public static final String UPDATE_PATH = ":update";
@@ -14,6 +18,8 @@ public class Endpoint {
     public static final String ONE_PATH = ":one";
     public static final String SEND_PATH = ":send";
     public static final String CHANGE_PASS_PATH = ":change-password";
+    public static final String SIGN_IN_PATH = ":sign-in";
+    public static final String SIGN_UP_PATH = ":sign-up";
 
     public static final String OLD = "/old";
     public static final String CHAT_ROOMS = "/chat-rooms";

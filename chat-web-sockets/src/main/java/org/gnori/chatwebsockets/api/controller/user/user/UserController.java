@@ -6,12 +6,16 @@ import lombok.experimental.FieldDefaults;
 import org.gnori.chatwebsockets.api.controller.user.payload.UserPayload;
 import org.gnori.chatwebsockets.api.controller.user.user.payload.ChangePasswordUserPayload;
 import org.gnori.chatwebsockets.api.controller.user.user.payload.CreateUserPayload;
+import org.gnori.chatwebsockets.api.dto.UserDto;
 import org.gnori.chatwebsockets.core.service.domain.UserService;
 import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
@@ -27,13 +31,23 @@ public class UserController {
     SimpMessagingTemplate simpMessagingTemplate;
     UserService<CustomUserDetails> userService;
 
-    @MessageMapping(USERS + CREATE_PATH)
-    public void create(
-            @Payload CreateUserPayload payload
+    @PostMapping(USERS + SIGN_UP_PATH)
+    public UserDto create(
+            @RequestBody CreateUserPayload bodyPayload
     ) {
-        simpMessagingTemplate.convertAndSend(
-                String.format(TOPIC_USER, payload.getUsername()),
-                userService.create(payload)
+        return userService.create(bodyPayload);
+    }
+
+
+    @DeleteMapping(USERS + DELETE_PATH)
+    public void delete(
+            SimpMessageHeaderAccessor headerAccessor
+    ) {
+        Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
+                sessionAttrs -> {
+                    final CustomUserDetails user = convertFrom(headerAccessor.getUser());
+                    userService.delete(user);
+                }
         );
     }
 
@@ -75,15 +89,4 @@ public class UserController {
         );
     }
 
-    @MessageMapping(USERS + DELETE_PATH)
-    public void delete(
-            SimpMessageHeaderAccessor headerAccessor
-    ) {
-        Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
-                sessionAttrs -> {
-                    final CustomUserDetails user = convertFrom(headerAccessor.getUser());
-                    userService.delete(user);
-                }
-        );
-    }
 }
