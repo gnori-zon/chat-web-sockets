@@ -37,7 +37,6 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                         login -> login
                                 .loginPage(START_PAGE_PATH)
                                 .loginProcessingUrl((USERS + SIGN_IN_PATH))
-                                .defaultSuccessUrl(MAIN_PAGE_PATH)
                 )
                 .logout(logout ->
                         logout
@@ -58,7 +57,6 @@ public class WebSecurityConfig implements WebMvcConfigurer {
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addViewController(START_PAGE_PATH).setViewName("index.html");
-        registry.addViewController(MAIN_PAGE_PATH).setViewName("onlyAuth.html");
     }
 
 }

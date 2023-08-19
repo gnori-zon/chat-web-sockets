@@ -7,8 +7,7 @@ import lombok.NoArgsConstructor;
 public class Endpoint {
 
     public static final String START_PAGE_PATH = "/";
-    public static final String MAIN_PAGE_PATH = "/main";
-    public static final String LOGOUT_PATH = "/main";
+    public static final String LOGOUT_PATH = "/logout";
 
     public static final String ADD_PATH = ":add";
     public static final String CREATE_PATH = ":create";

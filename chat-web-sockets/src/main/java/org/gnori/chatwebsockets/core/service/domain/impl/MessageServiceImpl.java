@@ -34,10 +34,8 @@ public class MessageServiceImpl implements MessageService<CustomUserDetails> {
     public List<MessageDto> getAll(MessagePayload payload, CustomUserDetails user) {
         final String chatRoomId = payload.getChatRoomId();
         if (user.getUser().getChatIds().contains(chatRoomId)) {
-            final String usernameFromMessage = payload.getFromUser();
 
-            return converter.convertAll(repository.findAllById(
-                    List.of(MessagePrimaryKey.of(chatRoomId, usernameFromMessage))));
+            return converter.convertAll(repository.findAllByChatId(chatRoomId));
         }
         throw new ForbiddenException();
     }
