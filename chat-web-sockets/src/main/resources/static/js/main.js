@@ -1,7 +1,8 @@
 'use strict';
 
-let HOST = 'http://localhost:8080';
-var currentUser = null
+var MAIN_HOST = 'http://localhost:8080';
+var CHAT_CLASS = 'chat-button';
+var currentUsername = null
 
 // choose sign-in or sign-up
 var choosePage = document.querySelector("#main-page")
@@ -23,31 +24,55 @@ function chooseRegistration(event) {
     event.preventDefault();
 }
 
-chooseLoginForm.addEventListener('submit', chooseLogin, true)
-chooseRegistrationForm.addEventListener('submit', chooseRegistration, true)
+chooseLoginForm.addEventListener('submit', chooseLogin, true);
+chooseRegistrationForm.addEventListener('submit', chooseRegistration, true);
 
-//sign-in
-function loginRequest(username, password) {
-    fetch(HOST + "/users:sign-in", {
+//auth and connect
+var stompClient = null;
+var chatListPage = document.querySelector("#chats-page")
+
+function authRequest(username, password) {
+    fetch(MAIN_HOST + "/users:sign-in", {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
         },
-        body: new URLSearchParams ({
-            'username' : username,
-            'password' : password
+        body: new URLSearchParams({
+            'username': username,
+            'password': password
         })
     })
         .then(response => {
-            currentUser = response.body;
             console.log(response.status)
             if (response.redirected) {
-                window.location.href = response.url;
+                chatListPage.classList.remove('hidden');
+                connect();
             }
         })
         .catch(err => console.log(err))
 }
 
+
+function connect() {
+    var socket = new SockJS('/ws');
+    stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, onConnected, onError);
+}
+
+function onConnected(options) {
+    stompClient.subscribe(('/topic/' + currentUsername + '/chat-rooms'), onChatRoomReceived);
+
+    stompClient.send('/app/chat-rooms:list');
+
+}
+
+function onError(error) {
+    connectingElement.textContent = 'Could not connect to WebSocket server. Please refresh this page to try again!';
+    connectingElement.style.color = 'red' + error.toString();
+}
+
+//sign-in
 var loginForm = document.querySelector('#loginForm');
 var password = null
 var username = null
@@ -57,9 +82,11 @@ function login(event) {
     password = document.querySelector('#password-log').value.trim();
 
     if (username && password) {
-        loginRequest(username, password)
+        authRequest(username, password)
+        currentUsername = username
         username = null
         password = null
+        loginPage.classList.add('hidden');
         event.preventDefault();
     }
 }
@@ -87,19 +114,21 @@ function registrate(event) {
             name: name
         };
 
-        fetch((HOST + '/users:sign-up'), {
+        fetch((MAIN_HOST + '/users:sign-up'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
         }).then(response => {
-            loginRequest(data.username, data.password)
+            authRequest(data.username, data.password)
+            currentUsername = username
             password2 = null;
             password = null;
             username = null;
             email = null;
             name = null;
+            registrationPage.classList.add('hidden');
             console.log(response.status)
         })
             .catch(err => console.log(err))
@@ -110,76 +139,13 @@ function registrate(event) {
 
 registrationForm.addEventListener('submit', registrate, true)
 
-//todo: write impl main logic
-var usernamePage = document.querySelector('#username-page');
-var chatPage = document.querySelector('#chat-page');
-var usernameForm = document.querySelector('#usernameForm');
-
-var messageForm = document.querySelector('#messageForm');
-var messageInput = document.querySelector('#message');
-var messageArea = document.querySelector('#messageArea');
+//chats
+var chats = []
+var chatArea = document.querySelector('#chatsArea');
 
 var newChatForm = document.querySelector('#newChatForm');
 var chatNameInput = document.querySelector('#chatName');
 var chatDescriptionInput = document.querySelector('#chatDescription');
-var chatArea = document.querySelector('#chatArea');
-
-var connectingElement = document.querySelector('.connecting');
-
-var stompClient = null;
-var username = null;
-
-var colors = [
-    '#2196F3', '#32c787', '#00BCD4', '#ff5652',
-    '#ffc107', '#ff85af', '#FF9800', '#39bbb0'
-];
-
-function connect(event) {
-    username = document.querySelector('#name').value.trim();
-
-    if (username) {
-        usernamePage.classList.add('hidden');
-        chatPage.classList.remove('hidden');
-
-        var socket = new SockJS('/ws');
-        stompClient = Stomp.over(socket);
-
-        stompClient.connect({}, onConnected, onError);
-    }
-    event.preventDefault();
-}
-
-
-function onConnected() {
-    stompClient.subscribe('/topic/public', onMessageReceived);
-    stompClient.subscribe(('/topic/' + username + '/chat-rooms'), onChatRoomReceived);
-    //
-    stompClient.send("/app/chat/user:add", {}, JSON.stringify({fromUser: username, text: 'hello'}))
-    //put username and get all chats
-    stompClient.send('/app/chat-rooms:list');
-
-    connectingElement.classList.add('hidden');
-}
-
-
-function onError(error) {
-    connectingElement.textContent = 'Could not connect to WebSocket server. Please refresh this page to try again!';
-    connectingElement.style.color = 'red' + error.toString();
-}
-
-
-function sendMessage(event) {
-    var messageContent = messageInput.value.trim();
-    if (messageContent && stompClient) {
-        var chatMessage = {
-            fromUser: username,
-            text: messageContent
-        };
-        stompClient.send("/app/chat/message:send", {}, JSON.stringify(chatMessage));
-        messageInput.value = '';
-    }
-    event.preventDefault();
-}
 
 function createChat(event) {
     var chatName = chatNameInput.value.trim();
@@ -205,35 +171,31 @@ function onChatRoomReceived(payload) {
 
 }
 
-function processOneChat(chatDto) {
-    var chatElement = document.createElement('li');
-    chatArea.classList.add('chat')
+var chatPage = document.querySelector("#chat-page")
 
-    var avatarChatElement = document.createElement('i');
-    var avatarChatText = document.createTextNode(chatDto.name[0]);
-    avatarChatElement.appendChild(avatarChatText);
-    avatarChatElement.style['background-color'] = getAvatarColor(chatDto.name);
-
-    chatElement.appendChild(avatarChatElement);
-
-    var nameTextChatElement = document.createElement('p');
-    var nameChat = document.createTextNode(chatDto.name);
-    nameTextChatElement.appendChild(nameChat);
-
-    chatElement.appendChild(nameTextChatElement);
-
-    var descriptionTextChatElement = document.createElement('p');
-    var descriptionChat = document.createTextNode(chatDto.description);
-    descriptionTextChatElement.appendChild(descriptionChat);
-
-    chatElement.appendChild(descriptionTextChatElement);
-
-    chatArea.appendChild(chatElement);
-    chatArea.scrollTop = chatArea.scrollHeight;
+function onSelectChat(event) {
+    var chatId = event.target.id;
+    console.log(chatId);
+    var messageDto = {
+        chatRoomId: chatId,
+        date: null,
+        fromUser: null
+    }
+    chatListPage.classList.add('hidden');
+    chatPage.classList.remove('hidden');
+    stompClient.subscribe(('/topic/' + chatId + '/old/messages'), onMessageReceived);
+    stompClient.send(('/app/old/messages'), {}, JSON.stringify(messageDto));
 }
 
 function onMessageReceived(payload) {
-    var message = JSON.parse(payload.body);
+    if (payload.body.startsWith('[')) {
+        JSON.parse(payload.body).forEach(message => processOneMessage(message))
+    } else {
+        processOneMessage(JSON.parse(payload.body));
+    }
+}
+
+function processOneMessage(message){
 
     var messageElement = document.createElement('li');
 
@@ -264,6 +226,62 @@ function onMessageReceived(payload) {
 }
 
 
+function processOneChat(chatDto) {
+    chats.push(chatDto);
+    console.log(chatDto)
+
+    var chatElement = document.createElement('li');
+    chatArea.classList.add('chat')
+
+    var avatarChatElement = document.createElement('i');
+    var avatarChatText = document.createTextNode(chatDto.name[0]);
+    avatarChatElement.appendChild(avatarChatText);
+    avatarChatElement.style['background-color'] = getAvatarColor(chatDto.name);
+
+    chatElement.appendChild(avatarChatElement);
+
+    var chatNameButton = document.createElement('button');
+    chatNameButton.textContent = chatDto.name;
+    chatNameButton.id = chatDto.id;
+    chatNameButton.type = 'button';
+    chatNameButton.classList.add(CHAT_CLASS);
+
+    chatNameButton.onclick = (event) => {
+        onSelectChat(event)
+    }
+    chatElement.appendChild(chatNameButton);
+
+    chatArea.appendChild(chatElement);
+    chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+newChatForm.addEventListener('submit', createChat, true);
+
+
+//todo: write impl main logic
+var messageForm = document.querySelector('#messageForm');
+var messageInput = document.querySelector('#message');
+var messageArea = document.querySelector('#messageArea');
+
+var colors = [
+    '#2196F3', '#32c787', '#00BCD4', '#ff5652',
+    '#ffc107', '#ff85af', '#FF9800', '#39bbb0'
+];
+
+function sendMessage(event) {
+    var messageContent = messageInput.value.trim();
+    if (messageContent && stompClient) {
+        var chatMessage = {
+            fromUser: username,
+            text: messageContent
+        };
+        stompClient.send("/app/chat/message:send", {}, JSON.stringify(chatMessage));
+        messageInput.value = '';
+    }
+    event.preventDefault();
+}
+
+
 function getAvatarColor(messageSender) {
     var hash = 0;
     for (var i = 0; i < messageSender.length; i++) {
@@ -273,6 +291,4 @@ function getAvatarColor(messageSender) {
     return colors[index];
 }
 
-usernameForm.addEventListener('submit', connect, true)
 messageForm.addEventListener('submit', sendMessage, true)
-newChatForm.addEventListener('submit', createChat, true)

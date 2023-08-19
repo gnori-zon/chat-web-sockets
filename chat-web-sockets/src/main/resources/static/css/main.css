@@ -93,28 +93,36 @@ button.accent {
     color: #fff;
 }
 
-#username-page {
+#main-page {
+    text-align: center;
+}
+#login-page{
+    text-align: center;
+}
+#registration-page{
+    text-align: center;
+}
+#chats-page {
     text-align: center;
 }
 
-.username-page-container {
+.chats-page-container {
     background: #fff;
     box-shadow: 0 1px 11px rgba(0, 0, 0, 0.27);
     border-radius: 2px;
     width: 100%;
-    max-width: 500px;
+    max-width: 600px;
     display: inline-block;
-    margin-top: 42px;
     vertical-align: middle;
     position: relative;
     padding: 35px 55px 35px;
     min-height: 250px;
     position: absolute;
-    top: 50%;
+    height: 98%;
+    top: 1%;
     left: 0;
     right: 0;
-    margin: 0 auto;
-    margin-top: -160px;
+    margin: auto auto 0;
 }
 
 .username-page-container .username-submit {
@@ -122,49 +130,45 @@ button.accent {
 }
 
 
-#chat-page {
+#chats-page {
     position: relative;
     height: 100%;
 }
 
-.chat-container {
+.chats-container {
     max-width: 700px;
+    max-height: 90%;
     margin-left: auto;
     margin-right: auto;
     background-color: #fff;
     box-shadow: 0 1px 11px rgba(0, 0, 0, 0.27);
     margin-top: 30px;
     height: calc(100% - 60px);
-    max-height: 600px;
     position: relative;
 }
 
-#chat-page ul {
+#chatsArea {
     list-style-type: none;
     background-color: #FFF;
     margin: 0;
     overflow: auto;
     overflow-y: scroll;
     padding: 0 20px 0px 20px;
-    height: calc(100% - 150px);
+    max-height: inherit;
 }
 
 #chat-page #messageForm {
     padding: 20px;
 }
 
-#chat-page ul li {
+#chats-page ul li {
     line-height: 1.5rem;
     padding: 10px 20px;
     margin: 0;
     border-bottom: 1px solid #f4f4f4;
 }
 
-#chat-page ul li p {
-    margin: 0;
-}
-
-#chat-page .event-message {
+#chats-page ul li {
     width: 100%;
     text-align: center;
     clear: both;
@@ -176,12 +180,12 @@ button.accent {
     word-wrap: break-word;
 }
 
-#chat-page .chat-message {
+#chats-page ul li {
     padding-left: 68px;
     position: relative;
 }
 
-#chat-page .chat-message i {
+#chats-page ul li i {
     position: absolute;
     width: 42px;
     height: 42px;
@@ -261,7 +265,7 @@ button.accent {
         padding: 25px;
     }
 
-    #chat-page ul {
+    #chats-page ul {
         height: calc(100% - 120px);
     }
 
