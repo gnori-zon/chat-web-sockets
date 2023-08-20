@@ -317,13 +317,13 @@ newChatForm.addEventListener('submit', createChat, true);
 
 var currentSettingsChatId = null
 var chatSettingsPage = document.querySelector("#chat-settings-page")
-var chatSettingsArea = document.querySelector("#settingsArea")
 
 var chatSettingsId = document.querySelector("#settings-chat-id")
 var chatSettingsName = document.querySelector("#settings-chat-name")
 var chatSettingsDescription = document.querySelector("#settings-chat-description")
 var chatSettingsOwner = document.querySelector("#settings-chat-owner")
 var chatSettingsConnectedUsers = document.querySelector("#settings-chat-connectedUser")
+var editChatSettingsButton = document.querySelector("#edit-chat-button")
 
 function onSelectSettingChat(event) {
     currentSettingsChatId = event.target.id.slice(CHAT_ID_SETTINGS_PREFIX.length);
@@ -339,8 +339,13 @@ function onSelectSettingChat(event) {
             chatSettingsDescription.textContent = currentChat.description
             chatSettingsOwner.textContent = currentChat.ownerUsername
             if (currentChat.connectedUsers != null) {
-                chatSettingsConnectedUsers = document.createElement("ul")
+                chatSettingsConnectedUsers.innerHTML = null
                 currentChat.connectedUsers.forEach(user => writeUserToSettings(user))
+            }
+            if (currentUsername === currentChat.ownerUsername) {
+                editChatSettingsButton.classList.remove('hidden');
+            } else {
+                editChatSettingsButton.classList.add('hidden');
             }
         }
     }
