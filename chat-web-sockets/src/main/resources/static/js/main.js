@@ -1,7 +1,10 @@
 'use strict';
 
 var MAIN_HOST = 'http://localhost:8080';
-var CHAT_CLASS = 'chat-button';
+var CHAT_CLASS_NAME = 'chat-name';
+var CHAT_CLASS_SETTINGS = 'chat-settings';
+var CHAT_ID_NAME_PREFIX = 'chat-name_';
+var CHAT_ID_SETTINGS_PREFIX = 'chat-settings_';
 var currentUsername = null
 
 // choose sign-in or sign-up
@@ -140,7 +143,7 @@ function registrate(event) {
 registrationForm.addEventListener('submit', registrate, true)
 
 //chats
-var chats = []
+var chats = new Map()
 var chatArea = document.querySelector('#chatsArea');
 
 var newChatForm = document.querySelector('#newChatForm');
@@ -172,19 +175,22 @@ function onChatRoomReceived(payload) {
 }
 
 var chatPage = document.querySelector("#chat-page")
+var currentChatId = null
 
 function onSelectChat(event) {
-    var chatId = event.target.id;
-    console.log(chatId);
+    currentChatId = event.target.id.slice(CHAT_ID_NAME_PREFIX.length);
+    console.log(currentChatId);
     var messageDto = {
-        chatRoomId: chatId,
+        chatRoomId: currentChatId,
         date: null,
         fromUser: null
     }
     chatListPage.classList.add('hidden');
     chatPage.classList.remove('hidden');
-    stompClient.subscribe(('/topic/' + chatId + '/old/messages'), onMessageReceived);
-    stompClient.send(('/app/old/messages'), {}, JSON.stringify(messageDto));
+
+    stompClient.subscribe(('/topic/' + currentChatId + '/old/messages'), onMessageReceived);
+    stompClient.send('/app/old/messages', {}, JSON.stringify(messageDto));
+    stompClient.subscribe(('/topic/' + currentChatId + '/messages'), onMessageReceived);
 }
 
 function onMessageReceived(payload) {
@@ -195,10 +201,8 @@ function onMessageReceived(payload) {
     }
 }
 
-function processOneMessage(message){
-
+function processOneMessage(message) {
     var messageElement = document.createElement('li');
-
 
     messageElement.classList.add('chat-message');
 
@@ -225,13 +229,55 @@ function processOneMessage(message){
     messageArea.scrollTop = messageArea.scrollHeight;
 }
 
+// send message
+var messageForm = document.querySelector('#messageForm');
+var messageInput = document.querySelector('#message');
+var messageArea = document.querySelector('#messageArea');
+
+function sendMessage(event) {
+    var messageContent = messageInput.value.trim();
+
+    if (messageContent && stompClient) {
+        var chatMessage = {
+            chatRoomId: currentChatId,
+            date: new Date(),
+            fromUser: currentUsername,
+            text: messageContent
+        };
+        stompClient.send("/app/messages:send", {}, JSON.stringify(chatMessage));
+        messageInput.value = '';
+    }
+    event.preventDefault();
+}
+
+
+messageForm.addEventListener('submit', sendMessage, true)
 
 function processOneChat(chatDto) {
-    chats.push(chatDto);
+    if (chats.has(chatDto.id)) {
+        replaceChat(chatDto);
+    } else {
+        addChat(chatDto);
+    }
+}
+
+function replaceChat(chatDto) {
+    chats.set(chatDto.id, chatDto);
+    console.log(chatDto);
+
+    var nameElement = document.querySelector('#' + CHAT_ID_NAME_PREFIX + chatDto.id);
+    nameElement.textContent = chatDto.name;
+    var avatarElement = document.querySelector('li:has(#' + CHAT_ID_NAME_PREFIX + chatDto.id +')>i');
+    avatarElement.textContent = chatDto.name[0];
+    avatarElement.style['background-color'] = getAvatarColor(chatDto.name);
+}
+
+function addChat(chatDto) {
+    chats.set(chatDto.id, chatDto)
     console.log(chatDto)
 
     var chatElement = document.createElement('li');
-    chatArea.classList.add('chat')
+    chatArea.classList.add('chats')
 
     var avatarChatElement = document.createElement('i');
     var avatarChatText = document.createTextNode(chatDto.name[0]);
@@ -242,14 +288,25 @@ function processOneChat(chatDto) {
 
     var chatNameButton = document.createElement('button');
     chatNameButton.textContent = chatDto.name;
-    chatNameButton.id = chatDto.id;
+    chatNameButton.id = CHAT_ID_NAME_PREFIX + chatDto.id;
     chatNameButton.type = 'button';
-    chatNameButton.classList.add(CHAT_CLASS);
+    chatNameButton.classList.add(CHAT_CLASS_NAME);
 
     chatNameButton.onclick = (event) => {
         onSelectChat(event)
     }
     chatElement.appendChild(chatNameButton);
+
+    var chatSettingsButton = document.createElement('button');
+    chatSettingsButton.textContent = '⚙';
+    chatSettingsButton.id = CHAT_ID_SETTINGS_PREFIX + chatDto.id;
+    chatSettingsButton.type = 'button';
+    chatSettingsButton.classList.add(CHAT_CLASS_SETTINGS);
+
+    chatSettingsButton.onclick = (event) => {
+        onSelectSettingChat(event)
+    }
+    chatElement.appendChild(chatSettingsButton);
 
     chatArea.appendChild(chatElement);
     chatArea.scrollTop = chatArea.scrollHeight;
@@ -258,29 +315,47 @@ function processOneChat(chatDto) {
 newChatForm.addEventListener('submit', createChat, true);
 
 
-//todo: write impl main logic
-var messageForm = document.querySelector('#messageForm');
-var messageInput = document.querySelector('#message');
-var messageArea = document.querySelector('#messageArea');
+var currentSettingsChatId = null
+var chatSettingsPage = document.querySelector("#chat-settings-page")
+var chatSettingsArea = document.querySelector("#settingsArea")
+
+var chatSettingsId = document.querySelector("#settings-chat-id")
+var chatSettingsName = document.querySelector("#settings-chat-name")
+var chatSettingsDescription = document.querySelector("#settings-chat-description")
+var chatSettingsOwner = document.querySelector("#settings-chat-owner")
+var chatSettingsConnectedUsers = document.querySelector("#settings-chat-connectedUser")
+
+function onSelectSettingChat(event) {
+    currentSettingsChatId = event.target.id.slice(CHAT_ID_SETTINGS_PREFIX.length);
+    console.log(currentSettingsChatId);
+
+    chatSettingsPage.classList.remove('hidden');
+    if (chats.has(currentSettingsChatId)) {
+        var currentChat = chats.get(currentSettingsChatId);
+
+        if (currentChat.id !== chatSettingsId.textContent) {
+            chatSettingsId.textContent = currentChat.id
+            chatSettingsName.textContent = currentChat.name
+            chatSettingsDescription.textContent = currentChat.description
+            chatSettingsOwner.textContent = currentChat.ownerUsername
+            if (currentChat.connectedUsers != null) {
+                chatSettingsConnectedUsers = document.createElement("ul")
+                currentChat.connectedUsers.forEach(user => writeUserToSettings(user))
+            }
+        }
+    }
+}
+
+function writeUserToSettings(user) {
+    var chatElement = document.createElement('li');
+    chatElement.textContent = user.username;
+    chatSettingsConnectedUsers.appendChild(chatElement);
+}
 
 var colors = [
     '#2196F3', '#32c787', '#00BCD4', '#ff5652',
     '#ffc107', '#ff85af', '#FF9800', '#39bbb0'
 ];
-
-function sendMessage(event) {
-    var messageContent = messageInput.value.trim();
-    if (messageContent && stompClient) {
-        var chatMessage = {
-            fromUser: username,
-            text: messageContent
-        };
-        stompClient.send("/app/chat/message:send", {}, JSON.stringify(chatMessage));
-        messageInput.value = '';
-    }
-    event.preventDefault();
-}
-
 
 function getAvatarColor(messageSender) {
     var hash = 0;
@@ -290,5 +365,3 @@ function getAvatarColor(messageSender) {
     var index = Math.abs(hash % colors.length);
     return colors[index];
 }
-
-messageForm.addEventListener('submit', sendMessage, true)

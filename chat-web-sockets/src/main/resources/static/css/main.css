@@ -105,6 +105,9 @@ button.accent {
 #chats-page {
     text-align: center;
 }
+#chat-settings-page {
+    text-align: left;
+}
 
 .chats-page-container {
     background: #fff;
@@ -135,7 +138,43 @@ button.accent {
     height: 100%;
 }
 
+.chat-settings-container {
+    background: #fff;
+    box-shadow: 0 1px 11px rgba(0, 0, 0, 0.27);
+    border-radius: 2px;
+    width: 100%;
+    max-width: 600px;
+    display: inline-block;
+    vertical-align: middle;
+    position: relative;
+    padding: 35px 55px 35px;
+    min-height: 250px;
+    position: absolute;
+    height: 98%;
+    top: 1%;
+    left: 0;
+    right: 0;
+    margin: auto auto 0;
+}
+
+#chat-settings-page {
+    position: relative;
+    height: 100%;
+}
+
 .chats-container {
+    max-width: 700px;
+    max-height: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: #fff;
+    box-shadow: 0 1px 11px rgba(0, 0, 0, 0.27);
+    margin-top: 30px;
+    height: calc(100% - 60px);
+    position: relative;
+}
+
+.chat-settings-container {
     max-width: 700px;
     max-height: 90%;
     margin-left: auto;
