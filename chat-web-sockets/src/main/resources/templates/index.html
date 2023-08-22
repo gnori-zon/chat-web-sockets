@@ -95,8 +95,29 @@
         </ul>
     </div>
     <button id="edit-chat-button" type="button" class="primary">edit</button>
-
+    <button id="delete-chat-button" type="button" class="primary">delete</button>
 </div>
+
+
+<div id="chat-edit-settings-page" class="hidden">
+    <h1 class="title">edit chat</h1>
+    <div class="edit-chat-page-container">
+        <form id="editChatForm" name="newChatForm">
+            <div class="form-group">
+                <input type="text" id="editChatName" placeholder="chat name..." autocomplete="off"
+                       class="form-control"/>
+            </div>
+            <div class="form-group">
+                <input type="text" id="editChatDescription" placeholder="description..." autocomplete="off"
+                       class="form-control"/>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="primary">update</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div id="new-chat-page" class="hidden">
     <h1 class="title">new chat</h1>
     <div class="new-chat-page-container">

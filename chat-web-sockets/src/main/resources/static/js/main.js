@@ -1,5 +1,5 @@
 'use strict';
-
+// https://stomp-js.github.io/stomp-websocket/codo/class/Client.html
 var MAIN_HOST = 'http://localhost:8080';
 var CHAT_CLASS_NAME = 'chat-name';
 var CHAT_CLASS_SETTINGS = 'chat-settings';
@@ -7,6 +7,9 @@ var CHAT_ID_NAME_PREFIX = 'chat-name_';
 var CHAT_ID_SETTINGS_PREFIX = 'chat-settings_';
 var currentUsername = null
 
+var oldMessageSubscribtion = null
+var messageSubscribtion = null
+var chatRoomsSubscribtion = null
 // choose sign-in or sign-up
 var choosePage = document.querySelector("#main-page")
 var loginPage = document.querySelector("#login-page")
@@ -49,6 +52,7 @@ function authRequest(username, password) {
             console.log(response.status)
             if (response.redirected) {
                 chatListPage.classList.remove('hidden');
+                currentUsername = username
                 connect();
             }
         })
@@ -64,7 +68,7 @@ function connect() {
 }
 
 function onConnected(options) {
-    stompClient.subscribe(('/topic/' + currentUsername + '/chat-rooms'), onChatRoomReceived);
+    chatRoomsSubscribtion = stompClient.subscribe(('/topic/' + currentUsername + '/chat-rooms'), onChatRoomReceived);
 
     stompClient.send('/app/chat-rooms:list');
 
@@ -86,9 +90,8 @@ function login(event) {
 
     if (username && password) {
         authRequest(username, password)
-        currentUsername = username
-        username = null
-        password = null
+        document.querySelector('#username-log').value = '';
+        document.querySelector('#password-log').value = '';
         loginPage.classList.add('hidden');
         event.preventDefault();
     }
@@ -125,12 +128,11 @@ function registrate(event) {
             body: JSON.stringify(data)
         }).then(response => {
             authRequest(data.username, data.password)
-            currentUsername = username
-            password2 = null;
-            password = null;
-            username = null;
-            email = null;
-            name = null;
+            document.querySelector('#username-reg').value = '';
+            document.querySelector('#password-reg-1').value = '';
+            document.querySelector('#password-reg-2').value = '';
+            document.querySelector('#email-reg').value = '';
+            document.querySelector('#name-reg').value = '';
             registrationPage.classList.add('hidden');
             console.log(response.status)
         })
@@ -178,6 +180,15 @@ var chatPage = document.querySelector("#chat-page")
 var currentChatId = null
 
 function onSelectChat(event) {
+    if (oldMessageSubscribtion !== null) {
+        oldMessageSubscribtion.unsubscribe()
+    }
+    if (messageSubscribtion !== null) {
+        messageSubscribtion.unsubscribe()
+    }
+
+    messageArea.innerHTML = null
+
     currentChatId = event.target.id.slice(CHAT_ID_NAME_PREFIX.length);
     console.log(currentChatId);
     var messageDto = {
@@ -188,9 +199,9 @@ function onSelectChat(event) {
     chatListPage.classList.add('hidden');
     chatPage.classList.remove('hidden');
 
-    stompClient.subscribe(('/topic/' + currentChatId + '/old/messages'), onMessageReceived);
+    oldMessageSubscribtion = stompClient.subscribe(('/topic/' + currentChatId + '/old/messages'), onMessageReceived);
     stompClient.send('/app/old/messages', {}, JSON.stringify(messageDto));
-    stompClient.subscribe(('/topic/' + currentChatId + '/messages'), onMessageReceived);
+    messageSubscribtion = stompClient.subscribe(('/topic/' + currentChatId + '/messages'), onMessageReceived);
 }
 
 function onMessageReceived(payload) {
@@ -250,7 +261,6 @@ function sendMessage(event) {
     event.preventDefault();
 }
 
-
 messageForm.addEventListener('submit', sendMessage, true)
 
 function processOneChat(chatDto) {
@@ -267,9 +277,16 @@ function replaceChat(chatDto) {
 
     var nameElement = document.querySelector('#' + CHAT_ID_NAME_PREFIX + chatDto.id);
     nameElement.textContent = chatDto.name;
-    var avatarElement = document.querySelector('li:has(#' + CHAT_ID_NAME_PREFIX + chatDto.id +')>i');
+    var avatarElement = document.querySelector('li:has(#' + CHAT_ID_NAME_PREFIX + chatDto.id + ')>i');
     avatarElement.textContent = chatDto.name[0];
     avatarElement.style['background-color'] = getAvatarColor(chatDto.name);
+}
+
+function deleteChat(id) {
+    chats.delete(id);
+    var nameElement = document.querySelector('#' + CHAT_ID_NAME_PREFIX + id);
+    var chat = nameElement.parentElement
+    chat.parentElement.removeChild(chat)
 }
 
 function addChat(chatDto) {
@@ -316,14 +333,18 @@ newChatForm.addEventListener('submit', createChat, true);
 
 
 var currentSettingsChatId = null
-var chatSettingsPage = document.querySelector("#chat-settings-page")
 
+var chatSettingsPage = document.querySelector("#chat-settings-page")
 var chatSettingsId = document.querySelector("#settings-chat-id")
 var chatSettingsName = document.querySelector("#settings-chat-name")
 var chatSettingsDescription = document.querySelector("#settings-chat-description")
 var chatSettingsOwner = document.querySelector("#settings-chat-owner")
 var chatSettingsConnectedUsers = document.querySelector("#settings-chat-connectedUser")
 var editChatSettingsButton = document.querySelector("#edit-chat-button")
+var deleteChatButton = document.querySelector("#delete-chat-button")
+
+var currentChat = null
+var countUser = 0
 
 function onSelectSettingChat(event) {
     currentSettingsChatId = event.target.id.slice(CHAT_ID_SETTINGS_PREFIX.length);
@@ -331,15 +352,19 @@ function onSelectSettingChat(event) {
 
     chatSettingsPage.classList.remove('hidden');
     if (chats.has(currentSettingsChatId)) {
-        var currentChat = chats.get(currentSettingsChatId);
+        currentChat = chats.get(currentSettingsChatId);
 
         if (currentChat.id !== chatSettingsId.textContent) {
-            chatSettingsId.textContent = currentChat.id
-            chatSettingsName.textContent = currentChat.name
-            chatSettingsDescription.textContent = currentChat.description
-            chatSettingsOwner.textContent = currentChat.ownerUsername
+            chatSettingsId.textContent = "id: " + currentChat.id
+            chatSettingsName.textContent = "name: " + currentChat.name
+            chatSettingsDescription.textContent = "description: " + currentChat.description
+            chatSettingsOwner.textContent = "owner: " + currentChat.ownerUsername
             if (currentChat.connectedUsers != null) {
                 chatSettingsConnectedUsers.innerHTML = null
+                var chatElement = document.createElement('li');
+                chatElement.textContent = "connected user: ";
+                countUser = 0
+                chatSettingsConnectedUsers.appendChild(chatElement);
                 currentChat.connectedUsers.forEach(user => writeUserToSettings(user))
             }
             if (currentUsername === currentChat.ownerUsername) {
@@ -353,8 +378,57 @@ function onSelectSettingChat(event) {
 
 function writeUserToSettings(user) {
     var chatElement = document.createElement('li');
-    chatElement.textContent = user.username;
+    chatElement.textContent = (countUser + 1) + ". " + user.username;
     chatSettingsConnectedUsers.appendChild(chatElement);
+}
+
+editChatSettingsButton.onclick = (event) => {
+    onClickEditChatSettings(event)
+}
+deleteChatButton.onclick = (event) => {
+    onClickDeleteChat(event)
+}
+
+var chatEditSettingsPage = document.querySelector("#chat-edit-settings-page")
+var editChatForm = document.querySelector("#editChatForm")
+var editChatName = document.querySelector("#editChatName")
+var editChatDescription = document.querySelector("#editChatDescription")
+
+function onClickEditChatSettings(event) {
+    chatSettingsPage.classList.add('hidden');
+    chatEditSettingsPage.classList.remove('hidden');
+    editChatName.setAttribute("value", currentChat.name);
+    editChatDescription.setAttribute("value", currentChat.description);
+}
+
+editChatForm.addEventListener('submit', updateChat, true)
+
+function updateChat(event) {
+    var chatName = editChatName.value.trim();
+    var chatDescription = editChatDescription.value.trim();
+    if (chatName && chatDescription && stompClient) {
+        var chatRoomDto = {
+            chatRoomId: currentSettingsChatId,
+            name: chatName,
+            description: chatDescription
+        };
+        stompClient.send("/app/chat-rooms:update", {}, JSON.stringify(chatRoomDto));
+        chatEditSettingsPage.classList.add('hidden');
+        editChatName.value = ''
+        editChatDescription.value = ''
+        currentSettingsChatId = null
+    }
+    event.preventDefault();
+}
+
+function onClickDeleteChat(event) {
+    chatSettingsPage.classList.add('hidden');
+    deleteChat(currentChat.id)
+    var chatRoomDto = {
+        chatRoomId: currentSettingsChatId
+    };
+    stompClient.send("/app/chat-rooms:delete", {}, JSON.stringify(chatRoomDto));
+    currentSettingsChatId = null;
 }
 
 var colors = [
