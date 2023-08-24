@@ -1,14 +1,19 @@
 'use strict';
 // https://stomp-js.github.io/stomp-websocket/codo/class/Client.html
-var MAIN_HOST = 'http://localhost:8080';
-var CHAT_CLASS_NAME = 'chat-name';
-var CHAT_CLASS_SETTINGS = 'chat-settings';
-var CHAT_ID_NAME_PREFIX = 'chat-name_';
-var CHAT_ID_SETTINGS_PREFIX = 'chat-settings_';
+const MAIN_HOST = 'http://localhost:8080';
+const CHAT_CLASS_NAME = 'chat-name';
+const CHAT_CLASS_SETTINGS = 'chat-settings';
+const CHAT_ID_NAME_PREFIX = 'chat-name_';
+const CHAT_ID_SETTINGS_PREFIX = 'chat-settings_';
+
+const MESSAGE_ID_EDIT_PREFIX = 'edit-message_'
+const MESSAGE_ID_DELETE_PREFIX = 'delete-message_'
 var currentUsername = null
 
-var oldMessageSubscribtion = null
-var messageSubscribtion = null
+var oldMessageSubscription = null
+var messageSubscription = null
+var updateMessageSubscription = null
+
 var chatRoomsSubscribtion = null
 // choose sign-in or sign-up
 var choosePage = document.querySelector("#main-page")
@@ -149,8 +154,8 @@ var chats = new Map()
 var chatArea = document.querySelector('#chatsArea');
 
 var newChatForm = document.querySelector('#newChatForm');
-var chatNameInput = document.querySelector('#chatName');
-var chatDescriptionInput = document.querySelector('#chatDescription');
+var chatNameInput = document.querySelector('#newChatName');
+var chatDescriptionInput = document.querySelector('#newChatDescription');
 
 function createChat(event) {
     var chatName = chatNameInput.value.trim();
@@ -167,6 +172,8 @@ function createChat(event) {
     event.preventDefault();
 }
 
+newChatForm.addEventListener('submit', createChat, true);
+
 function onChatRoomReceived(payload) {
     if (payload.body.startsWith('[')) {
         JSON.parse(payload.body).forEach(chat => processOneChat(chat))
@@ -180,28 +187,36 @@ var chatPage = document.querySelector("#chat-page")
 var currentChatId = null
 
 function onSelectChat(event) {
-    if (oldMessageSubscribtion !== null) {
-        oldMessageSubscribtion.unsubscribe()
-    }
-    if (messageSubscribtion !== null) {
-        messageSubscribtion.unsubscribe()
-    }
 
-    messageArea.innerHTML = null
+    var newChatId = event.target.id.slice(CHAT_ID_NAME_PREFIX.length);
+    if (newChatId !== currentChat) {
+        currentChatId = newChatId;
+        messageArea.innerHTML = null;
 
-    currentChatId = event.target.id.slice(CHAT_ID_NAME_PREFIX.length);
-    console.log(currentChatId);
-    var messageDto = {
-        chatRoomId: currentChatId,
-        date: null,
-        fromUser: null
+        if (oldMessageSubscription !== null) {
+            oldMessageSubscription.unsubscribe();
+        }
+        if (messageSubscription !== null) {
+            messageSubscription.unsubscribe();
+        }
+        if (updateMessageSubscription != null) {
+            updateMessageSubscription.unsubscribe();
+        }
+
+        console.log(currentChatId);
+        var messageDto = {
+            chatRoomId: currentChatId,
+            date: null,
+            fromUser: null
+        }
+        chatListPage.classList.add('hidden');
+        chatPage.classList.remove('hidden');
+
+        oldMessageSubscription = stompClient.subscribe(('/topic/' + currentChatId + '/old/messages'), onMessageReceived);
+        stompClient.send('/app/old/messages', {}, JSON.stringify(messageDto));
+        messageSubscription = stompClient.subscribe(('/topic/' + currentChatId + '/messages'), onMessageReceived);
+        updateMessageSubscription = stompClient.subscribe(('/topic/' + currentChatId + '/update/messages'), onMessageForDeleteReceived);
     }
-    chatListPage.classList.add('hidden');
-    chatPage.classList.remove('hidden');
-
-    oldMessageSubscribtion = stompClient.subscribe(('/topic/' + currentChatId + '/old/messages'), onMessageReceived);
-    stompClient.send('/app/old/messages', {}, JSON.stringify(messageDto));
-    messageSubscribtion = stompClient.subscribe(('/topic/' + currentChatId + '/messages'), onMessageReceived);
 }
 
 function onMessageReceived(payload) {
@@ -213,31 +228,54 @@ function onMessageReceived(payload) {
 }
 
 function processOneMessage(message) {
-    var messageElement = document.createElement('li');
+    var messagePk = MESSAGE_ID_EDIT_PREFIX + utf16ToUtf8(JSON.stringify(message.messagePrimaryKey));
+    var existMessage = document.querySelector('li:has(#' + messagePk + ')>p');
+    if (existMessage) {
+        existMessage.textContent = message.text;
+    } else {
+        var messageElement = document.createElement('li');
 
-    messageElement.classList.add('chat-message');
+        messageElement.classList.add('chat-message');
 
-    var avatarElement = document.createElement('i');
-    var avatarText = document.createTextNode(message.fromUser[0]);
-    avatarElement.appendChild(avatarText);
-    avatarElement.style['background-color'] = getAvatarColor(message.fromUser);
+        var avatarElement = document.createElement('i');
+        var avatarText = document.createTextNode(message.fromUser[0]);
+        avatarElement.appendChild(avatarText);
+        avatarElement.style['background-color'] = getAvatarColor(message.fromUser);
 
-    messageElement.appendChild(avatarElement);
+        messageElement.appendChild(avatarElement);
 
-    var usernameElement = document.createElement('span');
-    var usernameText = document.createTextNode(message.fromUser);
-    usernameElement.appendChild(usernameText);
-    messageElement.appendChild(usernameElement);
+        var usernameElement = document.createElement('span');
+        var usernameText = document.createTextNode(message.fromUser);
+        usernameElement.appendChild(usernameText);
+        messageElement.appendChild(usernameElement);
 
 
-    var textElement = document.createElement('p');
-    var messageText = document.createTextNode(message.text);
-    textElement.appendChild(messageText);
+        var textElement = document.createElement('p');
+        var messageText = document.createTextNode(message.text);
+        textElement.appendChild(messageText);
 
-    messageElement.appendChild(textElement);
+        messageElement.appendChild(textElement);
 
-    messageArea.appendChild(messageElement);
-    messageArea.scrollTop = messageArea.scrollHeight;
+        var deleteMessageButton = document.createElement('button');
+        deleteMessageButton.textContent = '🗑️';
+        deleteMessageButton.id = MESSAGE_ID_DELETE_PREFIX + JSON.stringify(message.messagePrimaryKey);
+        deleteMessageButton.onclick = (event) => {
+            onClickDeleteMessage(event)
+        };
+        messageElement.appendChild(deleteMessageButton);
+
+        var editMessageButton = document.createElement('button');
+        editMessageButton.id = MESSAGE_ID_EDIT_PREFIX + JSON.stringify(message.messagePrimaryKey);
+        editMessageButton.textContent = '📝';
+        editMessageButton.onclick = (event) => {
+            onClickEditMessage(event)
+        };
+        messageElement.appendChild(editMessageButton);
+
+
+        messageArea.appendChild(messageElement);
+        messageArea.scrollTop = messageArea.scrollHeight;
+    }
 }
 
 // send message
@@ -248,7 +286,7 @@ var messageArea = document.querySelector('#messageArea');
 function sendMessage(event) {
     var messageContent = messageInput.value.trim();
 
-    if (messageContent && stompClient) {
+    if (!selectedMessageId && messageContent && stompClient) {
         var chatMessage = {
             chatRoomId: currentChatId,
             date: new Date(),
@@ -262,6 +300,61 @@ function sendMessage(event) {
 }
 
 messageForm.addEventListener('submit', sendMessage, true)
+
+function onMessageForDeleteReceived(payload) {
+    var messageDto = JSON.parse(payload.body);
+    var messagePk = MESSAGE_ID_DELETE_PREFIX + utf16ToUtf8(JSON.stringify(messageDto.messagePrimaryKey));
+    var deleteButton = document.querySelector('#' + messagePk);
+    var li = deleteButton.parentElement;
+    li.parentElement.removeChild(li);
+}
+
+function onClickDeleteMessage(event) {
+    var messagePk = JSON.parse(event.target.id.slice(MESSAGE_ID_DELETE_PREFIX.length));
+    var messagePayload = {
+        chatRoomId: messagePk.chatRoomId,
+        date: messagePk.date,
+        fromUser: messagePk.username
+    }
+    stompClient.send('/app/messages:delete', {}, JSON.stringify(messagePayload));
+
+}
+
+var confirmEditMessageButton = document.querySelector("#confirm-edit-message")
+confirmEditMessageButton.onclick = (event) => {
+    onClickConfirmEditMessage(event)
+};
+
+var selectedMessageId = null
+var oldSelectedMessageText = null
+
+function onClickEditMessage(event) {
+    selectedMessageId = JSON.parse(event.target.id.slice(MESSAGE_ID_EDIT_PREFIX.length));
+    oldSelectedMessageText = messageInput.value.trim();
+    confirmEditMessageButton.classList.remove('hidden')
+    var existMessage = document.querySelector('li:has(#' + utf16ToUtf8(event.target.id) + ')>p');
+    if (existMessage) {
+        messageInput.value = existMessage.textContent
+    }
+}
+
+function onClickConfirmEditMessage(event) {
+    var messageContent = messageInput.value.trim();
+    if (messageContent && stompClient) {
+        if (messageContent !== oldSelectedMessageText) {
+            var chatMessage = {
+                chatRoomId: selectedMessageId.chatRoomId,
+                date: selectedMessageId.date,
+                fromUser: selectedMessageId.username,
+                text: messageContent
+            };
+            stompClient.send("/app/messages:update", {}, JSON.stringify(chatMessage));
+        }
+        messageInput.value = '';
+        selectedMessageId = null;
+        confirmEditMessageButton.classList.add('hidden')
+    }
+}
 
 function processOneChat(chatDto) {
     if (chats.has(chatDto.id)) {
@@ -328,9 +421,6 @@ function addChat(chatDto) {
     chatArea.appendChild(chatElement);
     chatArea.scrollTop = chatArea.scrollHeight;
 }
-
-newChatForm.addEventListener('submit', createChat, true);
-
 
 var currentSettingsChatId = null
 
@@ -443,4 +533,14 @@ function getAvatarColor(messageSender) {
     }
     var index = Math.abs(hash % colors.length);
     return colors[index];
+}
+
+function utf16ToUtf8(rawStr) {
+
+    return rawStr.replaceAll('{', '\\{')
+        .replaceAll(':', '\\:')
+        .replaceAll('}', '\\}')
+        .replaceAll('"', '\\"')
+        .replaceAll(',', '\\,')
+        .replaceAll('.', '\\.');
 }

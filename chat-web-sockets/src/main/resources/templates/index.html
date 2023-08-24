@@ -123,11 +123,11 @@
     <div class="new-chat-page-container">
         <form id="newChatForm" name="newChatForm">
             <div class="form-group">
-                <input type="text" id="chatName" placeholder="chat name..." autocomplete="off"
+                <input type="text" id="newChatName" placeholder="chat name..." autocomplete="off"
                        class="form-control"/>
             </div>
             <div class="form-group">
-                <input type="text" id="chatDescription" placeholder="description..." autocomplete="off"
+                <input type="text" id="newChatDescription" placeholder="description..." autocomplete="off"
                        class="form-control"/>
             </div>
             <div class="form-group">
@@ -152,6 +152,7 @@
                     <input type="text" id="message" placeholder="Type a message..." autocomplete="off"
                            class="form-control"/>
                     <button type="submit" class="primary">send</button>
+                    <button id="confirm-edit-message" class="hidden">✔</button>
                 </div>
             </div>
         </form>
