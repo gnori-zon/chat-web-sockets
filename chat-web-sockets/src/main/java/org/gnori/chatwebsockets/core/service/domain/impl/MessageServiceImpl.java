@@ -60,7 +60,7 @@ public class MessageServiceImpl implements MessageService<CustomUserDetails> {
             if (user.getUsername().equals(payload.getFromUser()) || isOwnerChatRoom(chatRoomId, user)) {
                 final MessagePrimaryKey primaryKey = new MessagePrimaryKey(payload.getFromUser(), payload.getChatRoomId(), payload.getDate());
 
-                repository.deleteById(MessagePrimaryKey.of(primaryKey));
+                repository.deleteByKey(primaryKey.getUsername(), primaryKey.getChatRoomId(), primaryKey.getDate());
 
                 return new MessageDto(primaryKey, null, null);
             }
@@ -108,7 +108,7 @@ public class MessageServiceImpl implements MessageService<CustomUserDetails> {
     }
 
     private Message getMessageOrElseThrow(MessagePrimaryKey primaryKey) {
-        return repository.findById(MessagePrimaryKey.of(primaryKey))
+        return repository.findByKey(primaryKey.getUsername(), primaryKey.getChatRoomId(), primaryKey.getDate())
                 .orElseThrow(NotFoundException::new);
     }
 }
