@@ -93,6 +93,16 @@
         <ul id="settings-chat-connectedUser">
 
         </ul>
+        <form id="addUserInChatForm">
+            <h2>Add user</h2>
+            <div class="form-group">
+                <input type="text" id="usernameAddingUser" placeholder="username..." autocomplete="off" class="form-control"/>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="primary">add user</button>
+            </div>
+        </form>
+
     </div>
     <button id="edit-chat-button" type="button" class="primary">edit</button>
     <button id="delete-chat-button" type="button" class="primary">delete</button>
@@ -104,12 +114,10 @@
     <div class="edit-chat-page-container">
         <form id="editChatForm" name="newChatForm">
             <div class="form-group">
-                <input type="text" id="editChatName" placeholder="chat name..." autocomplete="off"
-                       class="form-control"/>
+                <input type="text" id="editChatName" placeholder="chat name..." autocomplete="off" class="form-control"/>
             </div>
             <div class="form-group">
-                <input type="text" id="editChatDescription" placeholder="description..." autocomplete="off"
-                       class="form-control"/>
+                <input type="text" id="editChatDescription" placeholder="description..." autocomplete="off" class="form-control"/>
             </div>
             <div class="form-group">
                 <button type="submit" class="primary">update</button>

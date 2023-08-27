@@ -8,6 +8,8 @@ const CHAT_ID_SETTINGS_PREFIX = 'chat-settings_';
 
 const MESSAGE_ID_EDIT_PREFIX = 'edit-message_'
 const MESSAGE_ID_DELETE_PREFIX = 'delete-message_'
+
+const EXCLUDE_BUTTON_PREFIX = 'exlude-user_';
 var currentUsername = null
 
 var oldMessageSubscription = null
@@ -373,6 +375,10 @@ function replaceChat(chatDto) {
     var avatarElement = document.querySelector('li:has(#' + CHAT_ID_NAME_PREFIX + chatDto.id + ')>i');
     avatarElement.textContent = chatDto.name[0];
     avatarElement.style['background-color'] = getAvatarColor(chatDto.name);
+
+    if (!chatSettingsPage.classList.contains('hidden') && currentSettingsChatId === chatDto.id) {
+        displaySettingsChat();
+    }
 }
 
 function deleteChat(id) {
@@ -432,14 +438,19 @@ var chatSettingsOwner = document.querySelector("#settings-chat-owner")
 var chatSettingsConnectedUsers = document.querySelector("#settings-chat-connectedUser")
 var editChatSettingsButton = document.querySelector("#edit-chat-button")
 var deleteChatButton = document.querySelector("#delete-chat-button")
+var addUserInChatForm = document.querySelector('#addUserInChatForm')
+var usernameAddingUserInput = document.querySelector('#usernameAddingUser')
 
+addUserInChatForm.addEventListener('submit', onClickAddUserInChat, true)
 var currentChat = null
-var countUser = 0
 
 function onSelectSettingChat(event) {
     currentSettingsChatId = event.target.id.slice(CHAT_ID_SETTINGS_PREFIX.length);
     console.log(currentSettingsChatId);
+    displaySettingsChat();
+}
 
+function displaySettingsChat() {
     chatSettingsPage.classList.remove('hidden');
     if (chats.has(currentSettingsChatId)) {
         currentChat = chats.get(currentSettingsChatId);
@@ -451,10 +462,11 @@ function onSelectSettingChat(event) {
             chatSettingsOwner.textContent = "owner: " + currentChat.ownerUsername
             if (currentChat.connectedUsers != null) {
                 chatSettingsConnectedUsers.innerHTML = null
-                var chatElement = document.createElement('li');
-                chatElement.textContent = "connected user: ";
-                countUser = 0
-                chatSettingsConnectedUsers.appendChild(chatElement);
+
+                var textElement = document.createElement('p');
+                textElement.textContent = "connected user: ";
+
+                chatSettingsConnectedUsers.appendChild(textElement);
                 currentChat.connectedUsers.forEach(user => writeUserToSettings(user))
             }
             if (currentUsername === currentChat.ownerUsername) {
@@ -467,9 +479,43 @@ function onSelectSettingChat(event) {
 }
 
 function writeUserToSettings(user) {
-    var chatElement = document.createElement('li');
-    chatElement.textContent = (countUser + 1) + ". " + user.username;
-    chatSettingsConnectedUsers.appendChild(chatElement);
+    var userFromChat = document.createElement('li');
+
+    var textElement = document.createElement('p');
+    textElement.textContent = user.username;
+    userFromChat.appendChild(textElement);
+
+    var excludeUserButton = document.createElement("button");
+    excludeUserButton.textContent = '❌';
+    excludeUserButton.id = EXCLUDE_BUTTON_PREFIX + user.username;
+    excludeUserButton.onclick = (event) => {
+        onClickDeleteUser(event)
+    };
+
+    userFromChat.appendChild(excludeUserButton);
+    chatSettingsConnectedUsers.appendChild(userFromChat);
+}
+
+function onClickDeleteUser(event) {
+    var excludeUsername = event.target.id.slice(EXCLUDE_BUTTON_PREFIX.length);
+    var payload = {
+        username: excludeUsername,
+        chatRoomId: currentSettingsChatId
+    };
+    stompClient.send('/app/chat-rooms/users:delete', {}, JSON.stringify(payload));
+}
+
+function onClickAddUserInChat(event) {
+    var addingUsername = usernameAddingUserInput.value.trim();
+    if (addingUsername && currentSettingsChatId != null) {
+        var payload = {
+            username: addingUsername,
+            chatRoomId: currentSettingsChatId
+        };
+        stompClient.send('/app/chat-rooms/users:add', {}, JSON.stringify(payload))
+        usernameAddingUserInput.value = ''
+    }
+    event.preventDefault();
 }
 
 editChatSettingsButton.onclick = (event) => {
