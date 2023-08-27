@@ -108,9 +108,11 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
 
         if (user.getUsername().equals(chatRoom.getOwnerUsername()) && !user.getUsername().equals(username)) {
             if (isNotBlankList(chatRoom.getConnectedUsers())) {
-                chatRoom.getConnectedUsers().remove(user.getUser());
+                boolean isDeleted = chatRoom.getConnectedUsers().remove(user.getUser());
+                if (isDeleted) {
+                    repository.save(chatRoom);
+                }
             }
-            repository.save(chatRoom);
             userRepository.deleteChatRoomId(username, chatRoomId);
             return converter.convertFrom(chatRoom);
         }
@@ -124,12 +126,18 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
         ChatRoom chatRoom = getChatRoomOrElseThrow(chatRoomId);
 
         if (user.getUsername().equals(chatRoom.getOwnerUsername())) {
-            final Set<User> existUser = new HashSet<>(ListUtils.defaultIfNull(chatRoom.getConnectedUsers(), new ArrayList<>()));
-            existUser.add(user.getUser());
-            chatRoom.setConnectedUsers(existUser.stream().toList());
+            final User addingUser = userRepository.findByUsername(username)
+                    .orElseThrow(NotFoundException::new);
 
-            chatRoom = repository.save(chatRoom);
-            userRepository.addChatRoomId(username, chatRoomId);
+            final Set<User> existUser = new HashSet<>(ListUtils.defaultIfNull(chatRoom.getConnectedUsers(), new ArrayList<>()));
+            if (!new HashSet<>(addingUser.getChatIds()).contains(chatRoomId)) {
+                existUser.add(addingUser);
+                chatRoom.setConnectedUsers(existUser.stream().toList());
+                addingUser.getChatIds().add(chatRoomId);
+
+                chatRoom = repository.save(chatRoom);
+                userRepository.save(addingUser);
+            }
             return converter.convertFrom(chatRoom);
         }
         throw new ForbiddenException();

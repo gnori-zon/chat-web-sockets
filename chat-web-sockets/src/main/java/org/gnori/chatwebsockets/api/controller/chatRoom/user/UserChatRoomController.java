@@ -19,7 +19,6 @@ import static org.gnori.chatwebsockets.api.constant.Endpoint.*;
 import static org.gnori.chatwebsockets.core.service.security.util.SecurityUtil.convertFrom;
 
 @RestController
-@RequestMapping(CHAT_ROOMS)
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserChatRoomController {
@@ -27,7 +26,7 @@ public class UserChatRoomController {
     SimpMessagingTemplate simpMessagingTemplate;
     ChatRoomService<CustomUserDetails> chatRoomService;
 
-    @MessageMapping(USERS + ADD_PATH)
+    @MessageMapping(CHAT_ROOMS + USERS + ADD_PATH)
     public void addUser(
             @Payload UserChatRoomPayload payload,
             SimpMessageHeaderAccessor headerAccessor
@@ -42,7 +41,7 @@ public class UserChatRoomController {
         }
     }
 
-    @SubscribeMapping(USERS + DELETE_PATH)
+    @SubscribeMapping(CHAT_ROOMS + USERS + DELETE_PATH)
     public void deleteUser(
             @Payload UserChatRoomPayload payload,
             SimpMessageHeaderAccessor headerAccessor
