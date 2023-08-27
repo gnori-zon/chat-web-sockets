@@ -108,7 +108,10 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
 
         if (user.getUsername().equals(chatRoom.getOwnerUsername()) && !user.getUsername().equals(username)) {
             if (isNotBlankList(chatRoom.getConnectedUsers())) {
-                boolean isDeleted = chatRoom.getConnectedUsers().remove(user.getUser());
+                final User deletingUser = userRepository.findByUsername(username)
+                        .orElseThrow(NotFoundException::new);
+
+                boolean isDeleted = chatRoom.getConnectedUsers().remove(deletingUser);
                 if (isDeleted) {
                     repository.save(chatRoom);
                 }
