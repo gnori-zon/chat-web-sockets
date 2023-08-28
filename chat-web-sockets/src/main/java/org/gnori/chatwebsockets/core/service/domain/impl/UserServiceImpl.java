@@ -49,7 +49,6 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
         if (isNewUsernameAndSomeoneElseHasIt(payload.getUsername(), user.getUsername())) throw new ConflictException(EXIST_USERNAME_EX);
         final User userEntity = user.getUser();
         userEntity.setName(payload.getName());
-        userEntity.setUsername(payload.getUsername());
         userEntity.setEmail(payload.getEmail());
         return converter.convertFrom(repository.save(userEntity));
     }
