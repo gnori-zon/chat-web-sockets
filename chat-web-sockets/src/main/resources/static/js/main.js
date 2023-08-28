@@ -567,6 +567,46 @@ function onClickDeleteChat(event) {
     currentSettingsChatId = null;
 }
 
+var userSettingsPage = document.querySelector("#user-settings-page");
+var userSettingsUsername = document.querySelector("#settings-user-username");
+var userSettingsName = document.querySelector("#settings-user-name");
+var userSettingsEmail = document.querySelector("#settings-user-email");
+var editUserAccountButton = document.querySelector("#edit-user-button");
+var deleteUserAccountButton = document.querySelector("#delete-user-button");
+
+editUserAccountButton.onclick = (event) => {onClickEditUserAccount(event)};
+deleteUserAccountButton.onclick = (event) => {onClickDeleteUserAccount(event)};
+
+function onClickDeleteUserAccount(event) {
+
+}
+var editUserPage = document.querySelector("#user-edit-page");
+
+var editUserForm = document.querySelector("#editUserForm");
+var editUserName = document.querySelector("#editUserName");
+var editUserEmail = document.querySelector("#editUserEmail");
+
+var changePasswordForm = document.querySelector("#changePasswordForm");
+var userOldPassword = document.querySelector("#change-old-password");
+var userNewPassword1 = document.querySelector("#change-new-password1");
+var userNewPassword2 = document.querySelector("#change-new-password2");
+
+function onClickEditUserAccount(event) {
+    editUserPage.classList.remove('hidden');
+    stompClient.send()
+}
+
+editUserForm.addEventListener('submit', onClickConfirmEditUser, true);
+changePasswordForm.addEventListener('submit', onClickConfirmChangePassword, true);
+
+function onClickConfirmEditUser(event) {
+
+}
+
+function onClickConfirmChangePassword(event) {
+
+}
+
 var colors = [
     '#2196F3', '#32c787', '#00BCD4', '#ff5652',
     '#ffc107', '#ff85af', '#FF9800', '#39bbb0'

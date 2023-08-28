@@ -86,17 +86,17 @@
 <div id="chat-settings-page" class="hidden">
     <h1 class="title">settings chat</h1>
     <div class="chat-settings-container">
-        <div id="settings-chat-id" ></div>
-        <div id="settings-chat-name" ></div>
-        <div id="settings-chat-description" ></div>
+        <div id="settings-chat-id"></div>
+        <div id="settings-chat-name"></div>
+        <div id="settings-chat-description"></div>
         <div id="settings-chat-owner"></div>
-        <ul id="settings-chat-connectedUser">
+        <ul id="settings-chat-connectedUser"></ul>
 
-        </ul>
-        <form id="addUserInChatForm">
+        <form id="addUserInChatForm" name="addUserInChatForm">
             <h2>Add user</h2>
             <div class="form-group">
-                <input type="text" id="usernameAddingUser" placeholder="username..." autocomplete="off" class="form-control"/>
+                <input type="text" id="usernameAddingUser" placeholder="username..." autocomplete="off"
+                       class="form-control"/>
             </div>
             <div class="form-group">
                 <button type="submit" class="primary">add user</button>
@@ -112,12 +112,14 @@
 <div id="chat-edit-settings-page" class="hidden">
     <h1 class="title">edit chat</h1>
     <div class="edit-chat-page-container">
-        <form id="editChatForm" name="newChatForm">
+        <form id="editChatForm" name="editChatForm">
             <div class="form-group">
-                <input type="text" id="editChatName" placeholder="chat name..." autocomplete="off" class="form-control"/>
+                <input type="text" id="editChatName" placeholder="chat name..." autocomplete="off"
+                       class="form-control"/>
             </div>
             <div class="form-group">
-                <input type="text" id="editChatDescription" placeholder="description..." autocomplete="off" class="form-control"/>
+                <input type="text" id="editChatDescription" placeholder="description..." autocomplete="off"
+                       class="form-control"/>
             </div>
             <div class="form-group">
                 <button type="submit" class="primary">update</button>
@@ -162,6 +164,53 @@
                     <button type="submit" class="primary">send</button>
                     <button id="confirm-edit-message" class="hidden">✔</button>
                 </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="user-settings-page" class="hidden">
+    <h2>User settings</h2>
+    <div class="user-settings-container">
+        <div id="settings-user-username"></div>
+        <div id="settings-user-name"></div>
+        <div id="settings-user-email"></div>
+
+        <button id="edit-user-button" type="button" class="primary">edit</button>
+        <button id="delete-user-button" type="button" class="primary">delete</button>
+    </div>
+</div>
+
+<div id="user-edit-page" class="hidden">
+    <h1 class="title">edit user</h1>
+    <div class="user-edit-container">
+        <form id="editUserForm" name="editUserForm">
+            <div class="form-group">
+                <input type="text" id="editUserName" placeholder="name..." autocomplete="off" class="form-control"/>
+            </div>
+            <div class="form-group">
+                <input type="text" id="editUserEmail" placeholder="email..." autocomplete="off" class="form-control"/>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="primary">update</button>
+            </div>
+        </form>
+
+        <form id="changePasswordForm" name="changePasswordForm">
+            <div class="form-group">
+                <input type="password" id="change-old-password" placeholder="new password..." autocomplete="off"
+                       class="form-control"/>
+            </div>
+            <div class="form-group">
+                <input type="password" id="change-new-password1" placeholder="new password..." autocomplete="off"
+                       class="form-control"/>
+            </div>
+            <div class="form-group">
+                <input type="password" id="change-new-password2" placeholder="repeat new password..." autocomplete="off"
+                       class="form-control"/>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="primary">change password</button>
             </div>
         </form>
     </div>
