@@ -34,6 +34,14 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
     UserConverter converter;
 
     @Override
+    public UserDto get(CustomUserDetails user) {
+        final User existUser = repository.findByUsername(user.getUsername())
+                .orElseThrow(NotFoundException::new);
+
+        return converter.convertFrom(existUser);
+    }
+
+    @Override
     public UserDto create(CreateUserPayload payload) {
         if (repository.existsByUsername(payload.getUsername())) throw new ConflictException(EXIST_USERNAME_EX);
 

@@ -11,6 +11,7 @@ import org.gnori.chatwebsockets.core.exception.impl.NotFoundException;
 
 public interface UserService<A> {
 
+    UserDto get(A user) throws NotFoundException;
     UserDto create(CreateUserPayload payload) throws ConflictException;
     UserDto update(UserPayload payload, A user) throws ConflictException;
     UserDto changePassword(ChangePasswordUserPayload payload, A user) throws ConflictException;

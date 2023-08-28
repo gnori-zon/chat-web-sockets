@@ -89,4 +89,19 @@ public class UserController {
         );
     }
 
+    @MessageMapping(USERS_SELF)
+    public void changePassword(
+            SimpMessageHeaderAccessor headerAccessor
+    ) {
+        Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
+                sessionAttrs -> {
+                    final CustomUserDetails user = convertFrom(headerAccessor.getUser());
+                    simpMessagingTemplate.convertAndSend(
+                            String.format(TOPIC_USER, user.getUsername()),
+                            userService.get(user)
+                    );
+                }
+        );
+    }
+
 }

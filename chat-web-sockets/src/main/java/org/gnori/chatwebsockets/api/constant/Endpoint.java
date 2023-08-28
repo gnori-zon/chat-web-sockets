@@ -20,9 +20,11 @@ public class Endpoint {
     public static final String SIGN_IN_PATH = ":sign-in";
     public static final String SIGN_UP_PATH = ":sign-up";
 
+    public static final String USERS = "/users";
+    public static final String USERS_SELF = USERS + "/self-data";
+
     public static final String OLD = "/old";
     public static final String CHAT_ROOMS = "/chat-rooms";
-    public static final String USERS = "/users";
     public static final String ADMIN_USERS = "/admin/users";
     public static final String MESSAGES = "/messages";
     public static final String OLD_MESSAGES = OLD + MESSAGES;
