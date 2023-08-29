@@ -16,7 +16,9 @@ var oldMessageSubscription = null
 var messageSubscription = null
 var updateMessageSubscription = null
 
-var chatRoomsSubscribtion = null
+var chatRoomsSubscription = null
+
+var usersSubscription = null;
 // choose sign-in or sign-up
 var choosePage = document.querySelector("#main-page")
 var loginPage = document.querySelector("#login-page")
@@ -75,9 +77,11 @@ function connect() {
 }
 
 function onConnected(options) {
-    chatRoomsSubscribtion = stompClient.subscribe(('/topic/' + currentUsername + '/chat-rooms'), onChatRoomReceived);
-
+    chatRoomsSubscription = stompClient.subscribe(('/topic/' + currentUsername + '/chat-rooms'), onChatRoomReceived);
+    usersSubscription = stompClient.subscribe('/topic/' + currentUsername + '/users', onUserDataReceived);
+    stompClient.send('/app/users/self-data');
     stompClient.send('/app/chat-rooms:list');
+    userSettingsPage.classList.remove('hidden')
 
 }
 
@@ -182,7 +186,6 @@ function onChatRoomReceived(payload) {
     } else {
         processOneChat(JSON.parse(payload.body));
     }
-
 }
 
 var chatPage = document.querySelector("#chat-page")
@@ -594,17 +597,55 @@ var userNewPassword2 = document.querySelector("#change-new-password2");
 function onClickEditUserAccount(event) {
     editUserPage.classList.remove('hidden');
     stompClient.send()
+    editUserName.value = currentUser.name;
+    editUserEmail.value = currentUser.email;
 }
 
 editUserForm.addEventListener('submit', onClickConfirmEditUser, true);
 changePasswordForm.addEventListener('submit', onClickConfirmChangePassword, true);
 
 function onClickConfirmEditUser(event) {
+    var newName = editUserName.value.trim();
+    var newEmail = editUserEmail.value.trim();
 
+    if (newName && newEmail && (currentUser.name !== newEmail || currentUser.email !== name)) {
+        var payload = {
+            name: newName,
+            email: newEmail
+        }
+        stompClient.send('/app/users:update', {}, JSON.stringify(payload));
+        editUserName.value = '';
+        editUserEmail.value = '';
+        editUserPage.classList.add('hidden');
+    }
+    event.preventDefault();
 }
 
 function onClickConfirmChangePassword(event) {
+    var oldPass = userOldPassword.value.trim();
+    var newPass1 = userNewPassword1.value.trim();
+    var newPass2 = userNewPassword2.value.trim();
 
+    if (oldPass && newPass1 && newPass1 === newPass2) {
+        var payload = {
+            oldPassword: oldPass,
+            newPassword: newPass1
+        }
+        stompClient.send('/app/users:change-password', {}, JSON.stringify(payload));
+        userOldPassword.value = '';
+        userNewPassword1.value = '';
+        userNewPassword2.value = '';
+        editUserPage.classList.add('hidden');
+    }
+    event.preventDefault();
+}
+var currentUser = null;
+function onUserDataReceived(payload) {
+    currentUser = JSON.parse(payload.body);
+
+    userSettingsUsername.textContent = 'username: ' + currentUser.username;
+    userSettingsName.textContent = 'name: ' + currentUser.name;
+    userSettingsEmail.textContent = 'email: ' + currentUser.email;
 }
 
 var colors = [
