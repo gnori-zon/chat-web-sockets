@@ -90,7 +90,7 @@ public class UserController {
     }
 
     @MessageMapping(USERS_SELF)
-    public void changePassword(
+    public void get(
             SimpMessageHeaderAccessor headerAccessor
     ) {
         Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
