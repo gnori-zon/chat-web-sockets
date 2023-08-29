@@ -54,7 +54,6 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
 
     @Override
     public UserDto update(UserPayload payload, CustomUserDetails user) {
-        if (isNewUsernameAndSomeoneElseHasIt(payload.getUsername(), user.getUsername())) throw new ConflictException(EXIST_USERNAME_EX);
         final User userEntity = user.getUser();
         userEntity.setName(payload.getName());
         userEntity.setEmail(payload.getEmail());
@@ -104,7 +103,7 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
     }
 
     private boolean isNotValidOldPass(ChangePasswordUserPayload payload, CustomUserDetails user) {
-        return !bCryptPasswordEncoder.encode(payload.getOldPassword()).equals(user.getPassword());
+        return !bCryptPasswordEncoder.matches(payload.getOldPassword(), user.getPassword());
     }
 
     private User createFrom(CreateAdminUserPayload payload) {
