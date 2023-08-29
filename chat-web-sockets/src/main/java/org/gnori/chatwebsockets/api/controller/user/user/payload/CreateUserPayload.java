@@ -11,4 +11,5 @@ import org.gnori.chatwebsockets.api.controller.user.payload.UserPayload;
 @FieldDefaults(level = AccessLevel.PROTECTED)
 public class CreateUserPayload extends UserPayload {
     String password;
+    String username;
 }

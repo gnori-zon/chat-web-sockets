@@ -9,7 +9,6 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PROTECTED)
 public class UserPayload {
-    String username;
     String name;
     String email;
 }

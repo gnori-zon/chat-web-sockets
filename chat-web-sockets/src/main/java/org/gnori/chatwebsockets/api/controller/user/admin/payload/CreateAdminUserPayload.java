@@ -11,4 +11,5 @@ import lombok.experimental.FieldDefaults;
 public class CreateAdminUserPayload extends AdminUserPayload {
     Long id;
     String password;
+    String username;
 }

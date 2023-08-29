@@ -10,4 +10,5 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PROTECTED)
 public class UpdateAdminUserPayload extends AdminUserPayload {
     Long id;
+    String username;
 }
