@@ -68,6 +68,53 @@ function authRequest(username, password) {
         .catch(err => console.log(err))
 }
 
+function logout() {
+    fetch(MAIN_HOST + "/logout", {
+        method: 'POST'
+    })
+        .then(response => {
+            console.log(response.status)
+
+            if (response.redirected) {
+                chatListPage.classList.add('hidden');
+                currentUsername = ''
+            }
+            userSettingsName.textContent = '';
+            userSettingsUsername.textContent = '';
+            userSettingsEmail.textContent = '';
+
+            chatSettingsId.textContent = '';
+            chatSettingsName.textContent ='';
+            chatSettingsDescription.textContent = '';
+            chatSettingsOwner.textContent = '';
+            chatSettingsConnectedUsers.innerHTML = null;
+
+            editChatName.value = '';
+            editChatDescription.value = '';
+            editUserName.value = '';
+            editUserEmail.value = '';
+
+            chats = new Map()
+            chatArea.innerHTML = null;
+            messageArea.innerHTML = null;
+            currentChatId = null;
+            currentChat = null;
+            currentUser = null;
+            currentUsername = null;
+            currentSettingsChatId = null;
+        })
+        .catch(err => console.log(err))
+    fetch(MAIN_HOST, {
+        method: 'GET'
+    }).then(response => {
+            console.log(response.status)
+
+            if (response.redirected) {
+                chatListPage.classList.add('hidden');
+                currentUsername = ''
+            }
+        })
+}
 
 function connect() {
     var socket = new SockJS('/ws');
@@ -577,12 +624,38 @@ var userSettingsEmail = document.querySelector("#settings-user-email");
 var editUserAccountButton = document.querySelector("#edit-user-button");
 var deleteUserAccountButton = document.querySelector("#delete-user-button");
 
-editUserAccountButton.onclick = (event) => {onClickEditUserAccount(event)};
-deleteUserAccountButton.onclick = (event) => {onClickDeleteUserAccount(event)};
+editUserAccountButton.onclick = (event) => {
+    onClickEditUserAccount(event)
+};
+deleteUserAccountButton.onclick = (event) => {
+    onClickDeleteUserAccount(event)
+};
 
 function onClickDeleteUserAccount(event) {
+    stompClient.send("/app/users:delete", {}, {});
+    if (chatRoomsSubscription) {
+        chatRoomsSubscription.unsubscribe();
+    }
+    if (messageSubscription) {
+        messageSubscription.unsubscribe();
+    }
+    if (usersSubscription) {
+        usersSubscription.unsubscribe();
+    }
+    if (oldMessageSubscription) {
+        oldMessageSubscription.unsubscribe();
+    }
+    if (updateMessageSubscription) {
+        updateMessageSubscription.unsubscribe();
+    }
+    if (stompClient) {
+        stompClient.disconnect();
+        stompClient = null;
+    }
+    logout();
 
 }
+
 var editUserPage = document.querySelector("#user-edit-page");
 
 var editUserForm = document.querySelector("#editUserForm");
@@ -639,7 +712,9 @@ function onClickConfirmChangePassword(event) {
     }
     event.preventDefault();
 }
+
 var currentUser = null;
+
 function onUserDataReceived(payload) {
     currentUser = JSON.parse(payload.body);
 

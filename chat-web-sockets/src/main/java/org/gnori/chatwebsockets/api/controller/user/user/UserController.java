@@ -39,7 +39,7 @@ public class UserController {
     }
 
 
-    @DeleteMapping(USERS + DELETE_PATH)
+    @MessageMapping(USERS + DELETE_PATH)
     public void delete(
             SimpMessageHeaderAccessor headerAccessor
     ) {
