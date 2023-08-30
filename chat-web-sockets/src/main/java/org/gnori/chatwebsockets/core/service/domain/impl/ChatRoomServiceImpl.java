@@ -133,10 +133,12 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
                     .orElseThrow(NotFoundException::new);
 
             final Set<User> existUser = new HashSet<>(ListUtils.defaultIfNull(chatRoom.getConnectedUsers(), new ArrayList<>()));
-            if (!new HashSet<>(addingUser.getChatIds()).contains(chatRoomId)) {
+            final Set<String> chatIds = new HashSet<>(ListUtils.defaultIfNull(addingUser.getChatIds(), new ArrayList<>()));
+            if (!chatIds.contains(chatRoomId)) {
                 existUser.add(addingUser);
                 chatRoom.setConnectedUsers(existUser.stream().toList());
-                addingUser.getChatIds().add(chatRoomId);
+                chatIds.add(chatRoomId);
+                addingUser.setChatIds(chatIds.stream().toList());
 
                 chatRoom = repository.save(chatRoom);
                 userRepository.save(addingUser);
