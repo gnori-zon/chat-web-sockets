@@ -3,6 +3,7 @@ package org.gnori.chatwebsockets.api.controller.chatroom.user;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.gnori.chatwebsockets.api.dto.ChatRoomDto;
 import org.gnori.chatwebsockets.core.service.domain.ChatRoomService;
 import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -32,9 +33,14 @@ public class UserChatRoomController {
         final Map<String, Object> sessionAttrs = headerAccessor.getSessionAttributes();
         if (sessionAttrs != null) {
             final CustomUserDetails user = convertFrom(headerAccessor.getUser());
+            final ChatRoomDto chatRoomDto = chatRoomService.addUser(payload, user);
             simpMessagingTemplate.convertAndSend(
                     String.format(TOPIC_USER_CHAT_ROOMS, user.getUsername()),
-                    chatRoomService.addUser(payload, user)
+                    chatRoomDto
+            );
+            simpMessagingTemplate.convertAndSend(
+                    String.format(TOPIC_USER_CHAT_ROOMS, payload.getUsername()),
+                    chatRoomDto
             );
         }
     }
