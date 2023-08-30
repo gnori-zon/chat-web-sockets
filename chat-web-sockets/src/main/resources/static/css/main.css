@@ -1,0 +1,293 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+h1, h2 {
+    margin: 0;
+    font-weight: normal;
+}
+
+ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* Main page styles */
+#main-page {
+    background-color: #f2f2f2;
+    padding: 20px;
+}
+
+.title {
+    font-size: 36px;
+}
+
+.section-title {
+    font-size: 24px;
+}
+
+.main-choose-entry {
+    display: flex;
+    justify-content: space-between;
+}
+
+.form-group {
+    margin-bottom: 10px;
+}
+
+.accent {
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.sign-in-submit {
+    margin-right: 10px;
+}
+
+/* Registration page styles */
+#registration-page {
+    background-color: #f2f2f2;
+    padding: 20px;
+}
+
+.hidden {
+    display: none;
+}
+
+.registration-page-container {
+    max-width: 500px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    box-shadow: inset 0px -1px 0px rgba(0,0,0,0.1);
+}
+
+.reg-submit {
+    margin-top: 10px;
+}
+
+/* Login page styles */
+#login-page {
+    background-color: #f2f2f2;
+    padding: 20px;
+}
+
+.login-page-container {
+    max-width: 500px;
+}
+
+.log-submit {
+    margin-top: 10px;
+}
+
+/* Chats page styles */
+#chats-page {
+    background-color: #f2f2f2;
+    padding: 20px;
+}
+
+.chats-page-container {
+    max-width: 800px;
+}
+
+.chats-container {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    margin-top: 20px;
+}
+
+/* Chat settings page styles */
+#chat-settings-page {
+    background-color: #f2f2f2;
+    padding: 20px;
+}
+
+.chat-settings-container {
+    max-width: 500px;
+}
+
+.primary {
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+}
+
+/* Custom styles */
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"] {
+    margin-bottom: 10px;
+}
+
+.form-group button[type="submit"] {
+    align-self: flex-end;
+}
+
+#settings-chat-connectedUser {
+    margin-top: 20px;
+}
+
+#settings-chat-connectedUser li {
+    margin-bottom: 10px;
+}
+#edit-chat-button,
+#delete-chat-button,
+#edit-user-button,
+#delete-user-button {
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+#edit-chat-button:hover,
+#delete-chat-button:hover,
+#edit-user-button:hover,
+#delete-user-button:hover {
+    background-color: #3e8e41;
+}
+
+#chat-edit-settings-page,
+#new-chat-page,
+#chat-page,
+#user-settings-page,
+#user-edit-page {
+    background-color: #f2f2f2;
+    padding: 20px;
+}
+
+.title {
+    font-size: 36px;
+}
+
+.edit-chat-page-container,
+.new-chat-page-container,
+.user-settings-container,
+.user-edit-container {
+    max-width: 500px;
+}
+
+.chat-container {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    margin-top: 20px;
+}
+
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-header h2 {
+    margin: 0;
+}
+
+#messageArea {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.form-group {
+    margin-bottom: 10px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    box-shadow: inset 0px -1px 0px rgba(0,0,0,0.1);
+}
+
+.primary {
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.primary:hover {
+    background-color: #3e8e41;
+}
+
+.hidden {
+    display: none;
+}
+
+.form-group button[type="submit"] {
+    align-self: flex-end;
+}
+
+.input-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.input-group input[type="text"] {
+    flex-grow: 1;
+}
+
+#confirm-edit-message {
+    background-color: transparent;
+    border: none;
+    font-size: 20px;
+    color: #4CAF50;
+    cursor: pointer;
+}
+
+#confirm-edit-message:hover {
+    color: #3e8e41;
+}
+#changePasswordForm {
+    background-color: #f2f2f2;
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 10px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    box-shadow: inset 0px -1px 0px rgba(0,0,0,0.1);
+}
+
+.primary {
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.primary:hover {
+    background-color: #3e8e41;
+}
