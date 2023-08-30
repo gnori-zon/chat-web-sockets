@@ -397,7 +397,7 @@ function onClickConfirmEditMessage(event) {
             var chatMessage = {
                 chatRoomId: selectedMessageId.chatRoomId,
                 date: selectedMessageId.date,
-                fromUser: selectedMessageId.username,
+                fromUser: currentUsername,
                 text: messageContent
             };
             stompClient.send("/app/messages:update", {}, JSON.stringify(chatMessage));
