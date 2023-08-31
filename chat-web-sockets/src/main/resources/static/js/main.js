@@ -129,6 +129,7 @@ function onConnected(options) {
     stompClient.send('/app/users/self-data');
     stompClient.send('/app/chat-rooms:list');
     userSettingsPage.classList.remove('hidden')
+    newChatPage.classList.remove('hidden')
 
 }
 
@@ -206,6 +207,7 @@ registrationForm.addEventListener('submit', registrate, true)
 var chats = new Map()
 var chatArea = document.querySelector('#chatsArea');
 
+var newChatPage = document.querySelector('#new-chat-page');
 var newChatForm = document.querySelector('#newChatForm');
 var chatNameInput = document.querySelector('#newChatName');
 var chatDescriptionInput = document.querySelector('#newChatDescription');
@@ -261,6 +263,7 @@ function onSelectChat(event) {
             date: null,
             fromUser: null
         }
+        newChatPage.classList.add('hidden')
         chatListPage.classList.add('hidden');
         chatPage.classList.remove('hidden');
 
