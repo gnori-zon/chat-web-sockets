@@ -84,7 +84,7 @@ function logout() {
             userSettingsEmail.textContent = '';
 
             chatSettingsId.textContent = '';
-            chatSettingsName.textContent ='';
+            chatSettingsName.textContent = '';
             chatSettingsDescription.textContent = '';
             chatSettingsOwner.textContent = '';
             chatSettingsConnectedUsers.innerHTML = null;
@@ -107,13 +107,13 @@ function logout() {
     fetch(MAIN_HOST, {
         method: 'GET'
     }).then(response => {
-            console.log(response.status)
+        console.log(response.status)
 
-            if (response.redirected) {
-                chatListPage.classList.add('hidden');
-                currentUsername = ''
-            }
-        })
+        if (response.redirected) {
+            chatListPage.classList.add('hidden');
+            currentUsername = ''
+        }
+    })
 }
 
 function connect() {
@@ -238,7 +238,22 @@ function onChatRoomReceived(payload) {
 }
 
 var chatPage = document.querySelector("#chat-page")
+var closeChatPage = document.querySelector("#close-chat-page-button")
 var currentChatId = null
+
+closeChatPage.onclick = (event) => {
+    chatPage.classList.add('hidden');
+    chatListPage.classList.remove('hidden');
+    if (messageSubscription) {
+        messageSubscription.unsubscribe();
+    }
+    if (oldMessageSubscription) {
+        oldMessageSubscription.unsubscribe();
+    }
+    if (updateMessageSubscription) {
+        updateMessageSubscription.unsubscribe();
+    }
+}
 
 function onSelectChat(event) {
 
@@ -490,12 +505,23 @@ var chatSettingsDescription = document.querySelector("#settings-chat-description
 var chatSettingsOwner = document.querySelector("#settings-chat-owner")
 var chatSettingsConnectedUsers = document.querySelector("#settings-chat-connectedUser")
 var editChatSettingsButton = document.querySelector("#edit-chat-button")
+var backToSettingChatPage = document.querySelector("#back-to-chat-settings-page-button")
+var closeChatSettingsPageButton = document.querySelector("#close-chat-edit-settings-page-button")
 var deleteChatButton = document.querySelector("#delete-chat-button")
 var addUserInChatForm = document.querySelector('#addUserInChatForm')
 var usernameAddingUserInput = document.querySelector('#usernameAddingUser')
 
 addUserInChatForm.addEventListener('submit', onClickAddUserInChat, true)
 var currentChat = null
+
+closeChatSettingsPageButton.onclick = (event) => {
+    chatSettingsPage.classList.add("hidden");
+}
+
+backToSettingChatPage.onclick = () => {
+    chatSettingsPage.classList.remove("hidden");
+    chatEditSettingsPage.classList.add("hidden");
+}
 
 function onSelectSettingChat(event) {
     currentSettingsChatId = event.target.id.slice(CHAT_ID_SETTINGS_PREFIX.length);
