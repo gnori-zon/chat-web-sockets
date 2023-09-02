@@ -57,6 +57,10 @@ public class UserChatRoomController {
                     String.format(TOPIC_USER_CHAT_ROOMS, user.getUsername()),
                     chatRoomService.deleteUser(payload, user)
             );
+            simpMessagingTemplate.convertAndSend(
+                    String.format(TOPIC_USER_UPDATE_CHAT_ROOMS, payload.getUsername()),
+                    new ChatRoomDto(payload.getChatRoomId())
+            );
         }
     }
 }
