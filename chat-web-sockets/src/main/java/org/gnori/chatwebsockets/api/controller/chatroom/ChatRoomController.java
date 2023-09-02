@@ -85,10 +85,14 @@ public class ChatRoomController {
         final Map<String, Object> sessionAttrs = headerAccessor.getSessionAttributes();
         if (sessionAttrs != null) {
             final CustomUserDetails user = convertFrom(headerAccessor.getUser());
+            final ChatRoomDto chatRoomDto = chatRoomService.update(payload, user);
 
-            simpMessagingTemplate.convertAndSend(
-                    String.format(TOPIC_USER_CHAT_ROOMS, user.getUsername()),
-                    chatRoomService.update(payload, user)
+            chatRoomDto.getConnectedUsers().forEach(
+                    userDto ->
+                            simpMessagingTemplate.convertAndSend(
+                                    String.format(TOPIC_USER_UPDATE_CHAT_ROOMS, userDto.getUsername()),
+                                    new ChatRoomDto(chatRoomDto.getId())
+                            )
             );
         }
     }
@@ -101,7 +105,14 @@ public class ChatRoomController {
         final Map<String, Object> sessionAttrs = headerAccessor.getSessionAttributes();
         if (sessionAttrs != null) {
             final CustomUserDetails user = convertFrom(headerAccessor.getUser());
-            chatRoomService.delete(payload, user);
+            final ChatRoomDto chatRoomDto = chatRoomService.delete(payload, user);
+            chatRoomDto.getConnectedUsers().forEach(
+                    userDto ->
+                            simpMessagingTemplate.convertAndSend(
+                                    String.format(TOPIC_USER_UPDATE_CHAT_ROOMS, userDto.getUsername()),
+                                    new ChatRoomDto(chatRoomDto.getId())
+                            )
+            );
         }
     }
 }

@@ -21,4 +21,7 @@ public interface MessageRepository extends MapIdCassandraRepository<Message> {
 
     @Query(value = "select * from messages where chat_room_id = :chatRoomId and username = :username and date = :date")
     Optional<Message> findByKey(String username, String chatRoomId, LocalDateTime date);
+
+    @Query(value = "delete from messages where chat_room_id = :chatRoomId and username = :username")
+    void deleteAllByChatRoomIdAndUsername(String username, String chatRoomId);
 }

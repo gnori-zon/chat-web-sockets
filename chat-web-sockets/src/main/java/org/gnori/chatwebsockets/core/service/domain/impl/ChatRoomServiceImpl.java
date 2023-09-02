@@ -15,6 +15,7 @@ import org.gnori.chatwebsockets.core.domain.user.User;
 import org.gnori.chatwebsockets.core.exception.impl.ForbiddenException;
 import org.gnori.chatwebsockets.core.exception.impl.NotFoundException;
 import org.gnori.chatwebsockets.core.repository.ChatRoomRepository;
+import org.gnori.chatwebsockets.core.repository.MessageRepository;
 import org.gnori.chatwebsockets.core.repository.UserRepository;
 import org.gnori.chatwebsockets.core.service.domain.ChatRoomService;
 import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
@@ -31,6 +32,7 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
 
     ChatRoomConverter converter;
     ChatRoomRepository repository;
+    MessageRepository messageRepository;
     UserRepository userRepository;
 
     @Override
@@ -61,7 +63,15 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
             final ChatRoom chatRoom = optionalChatRoom.get();
             if (user.getUsername().equals(chatRoom.getOwnerUsername())) {
                 repository.deleteById(chatRoomId);
-                return null;
+
+                chatRoom.getConnectedUsers().forEach(
+                        connectedUser -> {
+                            userRepository.deleteChatRoomId(connectedUser.getUsername(), chatRoomId);
+                            messageRepository.deleteAllByChatRoomIdAndUsername(connectedUser.getUsername(), chatRoomId);
+                        }
+                );
+
+                return converter.convertFrom(chatRoom);
             }
         }
         throw new ForbiddenException();

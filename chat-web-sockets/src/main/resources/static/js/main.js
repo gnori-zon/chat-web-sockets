@@ -17,6 +17,7 @@ var messageSubscription = null
 var updateMessageSubscription = null
 
 var chatRoomsSubscription = null
+var chatRoomsUpdateSubscription = null
 
 var usersSubscription = null;
 // choose sign-in or sign-up
@@ -125,6 +126,7 @@ function connect() {
 
 function onConnected(options) {
     chatRoomsSubscription = stompClient.subscribe(('/topic/' + currentUsername + '/chat-rooms'), onChatRoomReceived);
+    chatRoomsUpdateSubscription = stompClient.subscribe(('/topic/' + currentUsername + '/update/chat-rooms'), onUpdateChatRoom);
     usersSubscription = stompClient.subscribe('/topic/' + currentUsername + '/users', onUserDataReceived);
     stompClient.send('/app/users/self-data');
     stompClient.send('/app/chat-rooms:list');
@@ -229,12 +231,25 @@ function createChat(event) {
 
 newChatForm.addEventListener('submit', createChat, true);
 
+function processOneChat(chat) {
+    if (chats.has(chat.id)) {
+        replaceChat(chat);
+    } else {
+        addChat(chat);
+    }
+}
+
 function onChatRoomReceived(payload) {
     if (payload.body.startsWith('[')) {
         JSON.parse(payload.body).forEach(chat => processOneChat(chat))
     } else {
         processOneChat(JSON.parse(payload.body));
     }
+}
+
+function onUpdateChatRoom(payload) {
+    console.log("updating..." + JSON.parse(payload.body).id)
+    replaceChat(JSON.parse(payload.body));
 }
 
 var chatPage = document.querySelector("#chat-page")
@@ -426,26 +441,23 @@ function onClickConfirmEditMessage(event) {
     }
 }
 
-function processOneChat(chatDto) {
-    if (chats.has(chatDto.id)) {
-        replaceChat(chatDto);
-    } else {
-        addChat(chatDto);
-    }
-}
-
 function replaceChat(chatDto) {
-    chats.set(chatDto.id, chatDto);
     console.log(chatDto);
+    if (!chatDto.connectedUsers) {
+        deleteChat(chatDto.id)
+    } else {
+        chats.set(chatDto.id, chatDto);
+        console.log(chatDto);
 
-    var nameElement = document.querySelector('#' + CHAT_ID_NAME_PREFIX + chatDto.id);
-    nameElement.textContent = chatDto.name;
-    var avatarElement = document.querySelector('li:has(#' + CHAT_ID_NAME_PREFIX + chatDto.id + ')>i');
-    avatarElement.textContent = chatDto.name[0];
-    avatarElement.style['background-color'] = getAvatarColor(chatDto.name);
+        var nameElement = document.querySelector('#' + CHAT_ID_NAME_PREFIX + chatDto.id);
+        nameElement.textContent = chatDto.name;
+        var avatarElement = document.querySelector('li:has(#' + CHAT_ID_NAME_PREFIX + chatDto.id + ')>i');
+        avatarElement.textContent = chatDto.name[0];
+        avatarElement.style['background-color'] = getAvatarColor(chatDto.name);
 
-    if (!chatSettingsPage.classList.contains('hidden') && currentSettingsChatId === chatDto.id) {
-        displaySettingsChat();
+        if (!chatSettingsPage.classList.contains('hidden') && currentSettingsChatId === chatDto.id) {
+            displaySettingsChat();
+        }
     }
 }
 
@@ -664,6 +676,9 @@ function onClickDeleteUserAccount(event) {
     stompClient.send("/app/users:delete", {}, {});
     if (chatRoomsSubscription) {
         chatRoomsSubscription.unsubscribe();
+    }
+    if (chatRoomsUpdateSubscription) {
+        chatRoomsUpdateSubscription.unsubscribe();
     }
     if (messageSubscription) {
         messageSubscription.unsubscribe();
