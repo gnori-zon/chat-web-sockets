@@ -14,9 +14,7 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 public class WebSocketEventListener {
-
-    private final SimpMessageSendingOperations sendingOperations;
-
+    
     @EventListener
     public void handleWebDisconnectListener(SessionDisconnectEvent event) {
         final StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
@@ -25,7 +23,6 @@ public class WebSocketEventListener {
             var username = (String) sessionAttrs.get("username");
             if (username != null) {
                 log.info("User disconnected: {}", username);
-                //todo: sending message 'user disconncted'
             }
         }
     }
