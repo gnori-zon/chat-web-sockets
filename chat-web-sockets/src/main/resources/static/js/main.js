@@ -258,6 +258,7 @@ var currentChatId = null
 
 closeChatPage.onclick = (event) => {
     chatPage.classList.add('hidden');
+    newChatPage.classList.remove('hidden');
     chatListPage.classList.remove('hidden');
     if (messageSubscription) {
         messageSubscription.unsubscribe();
@@ -528,6 +529,7 @@ var currentChat = null
 
 closeChatSettingsPageButton.onclick = (event) => {
     chatSettingsPage.classList.add("hidden");
+    newChatPage.classList.remove('hidden');
 }
 
 backToSettingChatPage.onclick = () => {
@@ -536,6 +538,7 @@ backToSettingChatPage.onclick = () => {
 }
 
 function onSelectSettingChat(event) {
+    newChatPage.classList.add('hidden')
     currentSettingsChatId = event.target.id.slice(CHAT_ID_SETTINGS_PREFIX.length);
     console.log(currentSettingsChatId);
     displaySettingsChat();
