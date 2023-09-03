@@ -20,6 +20,7 @@ var chatRoomsSubscription = null
 var chatRoomsUpdateSubscription = null
 
 var usersSubscription = null;
+var errorSubscription = null;
 // choose sign-in or sign-up
 var choosePage = document.querySelector("#main-page")
 var loginPage = document.querySelector("#login-page")
@@ -128,6 +129,7 @@ function onConnected(options) {
     chatRoomsSubscription = stompClient.subscribe(('/topic/' + currentUsername + '/chat-rooms'), onChatRoomReceived);
     chatRoomsUpdateSubscription = stompClient.subscribe(('/topic/' + currentUsername + '/update/chat-rooms'), onUpdateChatRoom);
     usersSubscription = stompClient.subscribe('/topic/' + currentUsername + '/users', onUserDataReceived);
+    errorSubscription = stompClient.subscribe('/topic/' + currentUsername + '/errors', onBusinessError);
     stompClient.send('/app/users/self-data');
     stompClient.send('/app/chat-rooms:list');
     userSettingsPage.classList.remove('hidden')
@@ -135,9 +137,25 @@ function onConnected(options) {
 
 }
 
+var errorElement = document.querySelector('#error-message')
+
 function onError(error) {
-    connectingElement.textContent = 'Could not connect to WebSocket server. Please refresh this page to try again!';
-    connectingElement.style.color = 'red' + error.toString();
+    errorElement.textContent = 'Could not connect to WebSocket server. Please refresh this page to try again!';
+    errorElement.style.color = 'red' + error.toString();
+    errorElement.classList.remove('hidden');
+    setTimeout(() => {
+        errorElement.classList.add('hidden');
+    }, 5500);
+}
+
+function onBusinessError(payload) {
+    var error = JSON.parse(payload.body);
+    errorElement.textContent = error.message;
+    errorElement.style.color = 'red';
+    errorElement.classList.remove('hidden');
+    setTimeout(() => {
+        errorElement.classList.add('hidden');
+    }, 5500);
 }
 
 //sign-in
@@ -682,6 +700,9 @@ function onClickDeleteUserAccount(event) {
     }
     if (chatRoomsUpdateSubscription) {
         chatRoomsUpdateSubscription.unsubscribe();
+    }
+    if (errorSubscription) {
+        errorSubscription.unsubscribe();
     }
     if (messageSubscription) {
         messageSubscription.unsubscribe();
