@@ -31,6 +31,9 @@ public class Endpoint {
 
 
     public static final String TOPIC = "/topic";
+
+    public static final String TOPIC_USER_ERROR = TOPIC + "/%s/errors";
+
     public static final String TOPIC_USER_CHAT_ROOMS = TOPIC + "/%s" + CHAT_ROOMS;
     public static final String TOPIC_USER_UPDATE_CHAT_ROOMS = TOPIC + "/%s/update" + CHAT_ROOMS;
 
