@@ -1,8 +1,6 @@
 package org.gnori.chatwebsockets.api.controller.chatroom;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.gnori.chatwebsockets.api.controller.BaseWebSocketController;
 import org.gnori.chatwebsockets.api.controller.chatroom.payload.ChatRoomPayload;
@@ -18,8 +16,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
 
 import static org.gnori.chatwebsockets.api.constant.Endpoint.*;
 import static org.gnori.chatwebsockets.core.service.security.util.SecurityUtil.convertFrom;

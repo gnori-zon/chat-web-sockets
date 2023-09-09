@@ -13,7 +13,6 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 @EnableWebSocketMessageBroker
 public class WebSocketConfig extends AbstractSessionWebSocketMessageBrokerConfigurer<Session> {
 
-
     @Override
     public void configureStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
