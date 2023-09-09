@@ -482,6 +482,17 @@ function replaceChat(chatDto) {
 
 function deleteChat(id) {
     chats.delete(id);
+    if (currentChatId === id) {
+        if (oldMessageSubscription) {
+            oldMessageSubscription.unsubscribe();
+        }
+        if (messageSubscription) {
+            messageSubscription.unsubscribe();
+        }
+        if (updateMessageSubscription) {
+            updateMessageSubscription.unsubscribe();
+        }
+    }
     var nameElement = document.querySelector('#' + CHAT_ID_NAME_PREFIX + id);
     var chat = nameElement.parentElement
     chat.parentElement.removeChild(chat)
@@ -671,7 +682,7 @@ function updateChat(event) {
 
 function onClickDeleteChat(event) {
     chatSettingsPage.classList.add('hidden');
-    deleteChat(currentChat.id)
+    deleteChat(currentChat.id);
     var chatRoomDto = {
         chatRoomId: currentSettingsChatId
     };
