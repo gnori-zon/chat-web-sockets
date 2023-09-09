@@ -1,11 +1,12 @@
 package org.gnori.chatwebsockets.api.controller.message;
 
 import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.gnori.chatwebsockets.api.controller.BaseWebSocketController;
 import org.gnori.chatwebsockets.api.controller.message.payload.CreateMessagePayload;
 import org.gnori.chatwebsockets.api.controller.message.payload.MessagePayload;
 import org.gnori.chatwebsockets.api.controller.message.payload.UpdateMessagePayload;
+import org.gnori.chatwebsockets.api.dto.MessageDto;
 import org.gnori.chatwebsockets.core.service.domain.MessageService;
 import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -14,35 +15,36 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Optional;
+import java.util.List;
 
 import static org.gnori.chatwebsockets.api.constant.Endpoint.*;
 import static org.gnori.chatwebsockets.core.service.security.util.SecurityUtil.convertFrom;
 
 @RestController
-@RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class MessageController {
+public class MessageController extends BaseWebSocketController {
 
     MessageService<CustomUserDetails> messageService;
-    SimpMessagingTemplate simpMessagingTemplate;
+
+    public MessageController(SimpMessagingTemplate simpMessagingTemplate, MessageService<CustomUserDetails> messageService) {
+        super(simpMessagingTemplate);
+        this.messageService = messageService;
+    }
 
     @MessageMapping(OLD_MESSAGES)
     public void getOldMessages(
             @Payload MessagePayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
+        doIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final String chatRoomId = payload.getChatRoomId();
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
+                    final List<MessageDto> oldMessages = messageService.getAll(payload, user);
 
                     simpMessagingTemplate.convertAndSend(
                             String.format(TOPIC_CHAT_ROOM_OLD_MESSAGES, chatRoomId),
-                            messageService.getAll(
-                                    payload,
-                                    user
-                            )
+                            oldMessages
                     );
                 }
         );
@@ -53,17 +55,15 @@ public class MessageController {
             @Payload CreateMessagePayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
+        doIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final String chatRoomId = payload.getChatRoomId();
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
+                    final MessageDto createdMessageDto = messageService.create(payload, user);
 
                     simpMessagingTemplate.convertAndSend(
                             String.format(TOPIC_CHAT_ROOM_MESSAGES, chatRoomId),
-                            messageService.create(
-                                    payload,
-                                    user
-                            )
+                            createdMessageDto
                     );
                 }
         );
@@ -74,17 +74,15 @@ public class MessageController {
             @Payload UpdateMessagePayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
+        doIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final String chatRoomId = payload.getChatRoomId();
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
+                    final MessageDto updatedMessageDto = messageService.update(payload, user);
 
                     simpMessagingTemplate.convertAndSend(
                             String.format(TOPIC_CHAT_ROOM_OLD_MESSAGES, chatRoomId),
-                            messageService.update(
-                                    payload,
-                                    user
-                            )
+                            updatedMessageDto
                     );
                 }
         );
@@ -95,17 +93,15 @@ public class MessageController {
             @Payload MessagePayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
+        doIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final String chatRoomId = payload.getChatRoomId();
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
+                    final MessageDto deletedMessageDto = messageService.delete(payload, user);
 
                     simpMessagingTemplate.convertAndSend(
                             String.format(TOPIC_CHAT_ROOM_UPDATE_MESSAGES, chatRoomId),
-                            messageService.delete(
-                                    payload,
-                                    user
-                            )
+                            deletedMessageDto
                     );
                 }
         );
