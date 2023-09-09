@@ -37,13 +37,19 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
 
     @Override
     public List<ChatRoomDto> getAll(CustomUserDetails user) {
-        final User userData = user.getUser();
-        final List<String> chatIds = userData.getChatIds();
-        if (chatIds == null || chatIds.isEmpty()) return Collections.emptyList();
-        return converter.convertAll(
-                StreamSupport.stream(repository.findAllById(chatIds).spliterator(), false)
-                        .collect(Collectors.toList())
-        );
+        final Long userId = user.getUserId();
+        final User userEntity = userRepository.findById(userId)
+                .orElseThrow(NotFoundException::new);
+        final List<String> chatIds = userEntity.getChatIds();
+
+        if (chatIds != null && !chatIds.isEmpty()) {
+            return converter.convertAll(
+                    StreamSupport.stream(repository.findAllById(chatIds).spliterator(), false)
+                            .collect(Collectors.toList())
+            );
+        }
+
+        return Collections.emptyList();
     }
 
     @Override
@@ -79,13 +85,22 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
 
     @Override
     public ChatRoomDto create(CreateChatRoomPayload payload, CustomUserDetails user) {
+
+        final Long userId = user.getUserId();
+        final User userEntity = userRepository.findById(userId)
+                .orElseThrow(NotFoundException::new);
+
         ChatRoom chatRoom = new ChatRoom(
                 null,
                 payload.getName(),
                 payload.getDescription(),
                 user.getUsername(),
-                List.of(user.getUser())
+                List.of(userEntity)
         );
+
+
+        final List<String> chatIds = userEntity.getChatIds();
+        chatIds.add(chatRoom.getId());
 
         chatRoom = repository.save(chatRoom);
         userRepository.addChatRoomId(user.getUsername(), chatRoom.getId());

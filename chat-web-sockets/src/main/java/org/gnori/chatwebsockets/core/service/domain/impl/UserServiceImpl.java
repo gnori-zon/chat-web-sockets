@@ -54,24 +54,33 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
 
     @Override
     public UserDto update(UserPayload payload, CustomUserDetails user) {
-        final User userEntity = user.getUser();
+        final Long userId = user.getUserId();
+        final User userEntity = repository.findById(userId)
+                .orElseThrow(NotFoundException::new);
+
         userEntity.setName(payload.getName());
         userEntity.setEmail(payload.getEmail());
+
         return converter.convertFrom(repository.save(userEntity));
     }
 
     @Override
     public UserDto changePassword(ChangePasswordUserPayload payload, CustomUserDetails user) {
         if (isNotValidOldPass(payload, user)) throw new ConflictException("Not valid old password");
-        final User userEntity = user.getUser();
+        final Long userId = user.getUserId();
+        final User userEntity = repository.findById(userId)
+                .orElseThrow(NotFoundException::new);
+
         userEntity.setPassword(bCryptPasswordEncoder.encode(payload.getNewPassword()));
+
         return converter.convertFrom(repository.save(userEntity));
     }
 
     @Override
     public UserDto adminUpdateById(UpdateAdminUserPayload payload) {
         final User oldUserEntity = repository.findById(payload.getId()).orElseThrow(NotFoundException::new);
-        if (isNewUsernameAndSomeoneElseHasIt(payload.getUsername(), oldUserEntity.getUsername())) throw new ConflictException(EXIST_USERNAME_EX);
+        if (isNewUsernameAndSomeoneElseHasIt(payload.getUsername(), oldUserEntity.getUsername()))
+            throw new ConflictException(EXIST_USERNAME_EX);
 
         oldUserEntity.setUsername(payload.getUsername());
         oldUserEntity.setName(payload.getName());
@@ -90,7 +99,7 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
 
     @Override
     public void delete(CustomUserDetails user) {
-        repository.delete(user.getUser());
+        repository.deleteById(user.getUserId());
     }
 
     @Override

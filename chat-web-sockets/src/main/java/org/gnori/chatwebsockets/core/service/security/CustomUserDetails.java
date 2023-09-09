@@ -2,7 +2,6 @@ package org.gnori.chatwebsockets.core.service.security;
 
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import org.gnori.chatwebsockets.core.domain.user.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -10,7 +9,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 
-@Getter
 @AllArgsConstructor
 public class CustomUserDetails implements UserDetails {
 
@@ -22,6 +20,10 @@ public class CustomUserDetails implements UserDetails {
                 .stream()
                 .map(role -> new SimpleGrantedAuthority(role.name()))
                 .toList();
+    }
+
+    public Long getUserId() {
+        return user.getId();
     }
 
     @Override

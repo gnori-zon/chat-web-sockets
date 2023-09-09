@@ -13,9 +13,8 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Optional;
 
 import static org.gnori.chatwebsockets.api.constant.Endpoint.*;
 import static org.gnori.chatwebsockets.core.service.security.util.SecurityUtil.convertFrom;
@@ -23,6 +22,8 @@ import static org.gnori.chatwebsockets.core.service.security.util.SecurityUtil.c
 @RestController
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AdminUserController extends BaseWebSocketController {
+
+    private static final SimpleGrantedAuthority ADMIN_AUTHORITY = new SimpleGrantedAuthority(Role.ADMIN.name());
 
     UserService<CustomUserDetails> userService;
 
@@ -40,15 +41,16 @@ public class AdminUserController extends BaseWebSocketController {
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
 
-                    if (user.getUser().getRoles().contains(Role.ADMIN)) {
-                        final UserDto createUser = userService.adminCreate(payload);
+                    doIfAdmin(user,
+                            () -> {
+                                final UserDto createUser = userService.adminCreate(payload);
 
-                        simpMessagingTemplate.convertAndSend(
-                                String.format(TOPIC_ADMIN_USER, user.getUsername()),
-                                createUser
-                        );
-                    }
-
+                                simpMessagingTemplate.convertAndSend(
+                                        String.format(TOPIC_ADMIN_USER, user.getUsername()),
+                                        createUser
+                                );
+                            }
+                    );
                 }
         );
     }
@@ -61,16 +63,16 @@ public class AdminUserController extends BaseWebSocketController {
         doIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
+                    doIfAdmin(user,
+                            () -> {
+                                final UserDto updatedUserDto = userService.adminUpdateById(payload);
 
-                    if (user.getUser().getRoles().contains(Role.ADMIN)) {
-                        final UserDto updatedUserDto = userService.adminUpdateById(payload);
-
-                        simpMessagingTemplate.convertAndSend(
-                                String.format(TOPIC_ADMIN_USER, user.getUsername()),
-                                updatedUserDto
-                        );
-                    }
-
+                                simpMessagingTemplate.convertAndSend(
+                                        String.format(TOPIC_ADMIN_USER, user.getUsername()),
+                                        updatedUserDto
+                                );
+                            }
+                    );
                 }
         );
     }
@@ -83,11 +85,14 @@ public class AdminUserController extends BaseWebSocketController {
         doIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
-
-                    if (user.getUser().getRoles().contains(Role.ADMIN)) {
-                        userService.adminDelete(id);
-                    }
+                    doIfAdmin(user, () -> userService.adminDelete(id));
                 }
         );
+    }
+
+    private void doIfAdmin(CustomUserDetails userDetails, Runnable runnable) {
+        if (userDetails.getAuthorities().contains(ADMIN_AUTHORITY)) {
+            runnable.run();
+        }
     }
 }
