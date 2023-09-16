@@ -73,40 +73,51 @@ function authRequest(username, password) {
         .catch(err => console.log(err))
 }
 
+function clearPage() {
+    chatListPage.classList.add('hidden');
+    newChatPage.classList.add('hidden');
+    chatPage.classList.add('hidden');
+    chatSettingsPage.classList.add('hidden');
+    userSettingsPage.classList.add('hidden');
+    editUserPage.classList.add('hidden');
+    chatEditSettingsPage.classList.add('hidden');
+    registrationPage.classList.add('hidden');
+    loginPage.classList.add('hidden');
+    choosePage.classList.remove('hidden');
+    currentUsername = ''
+
+    userSettingsName.textContent = '';
+    userSettingsUsername.textContent = '';
+    userSettingsEmail.textContent = '';
+
+    chatSettingsId.textContent = '';
+    chatSettingsName.textContent = '';
+    chatSettingsDescription.textContent = '';
+    chatSettingsOwner.textContent = '';
+    chatSettingsConnectedUsers.innerHTML = null;
+
+    editChatName.value = '';
+    editChatDescription.value = '';
+    editUserName.value = '';
+    editUserEmail.value = '';
+
+    chats = new Map()
+    chatArea.innerHTML = null;
+    messageArea.innerHTML = null;
+    currentChatId = null;
+    currentChat = null;
+    currentUser = null;
+    currentUsername = null;
+    currentSettingsChatId = null;
+}
+
 function logout() {
     fetch(MAIN_HOST + "/logout", {
         method: 'POST'
     })
         .then(response => {
             console.log(response.status)
-
-            if (response.redirected) {
-                chatListPage.classList.add('hidden');
-                currentUsername = ''
-            }
-            userSettingsName.textContent = '';
-            userSettingsUsername.textContent = '';
-            userSettingsEmail.textContent = '';
-
-            chatSettingsId.textContent = '';
-            chatSettingsName.textContent = '';
-            chatSettingsDescription.textContent = '';
-            chatSettingsOwner.textContent = '';
-            chatSettingsConnectedUsers.innerHTML = null;
-
-            editChatName.value = '';
-            editChatDescription.value = '';
-            editUserName.value = '';
-            editUserEmail.value = '';
-
-            chats = new Map()
-            chatArea.innerHTML = null;
-            messageArea.innerHTML = null;
-            currentChatId = null;
-            currentChat = null;
-            currentUser = null;
-            currentUsername = null;
-            currentSettingsChatId = null;
+            clearPage()
         })
         .catch(err => console.log(err))
     fetch(MAIN_HOST, {
@@ -278,10 +289,10 @@ function onUpdateChatRoom(payload) {
 }
 
 var chatPage = document.querySelector("#chat-page")
-var closeChatPage = document.querySelector("#close-chat-page-button")
+var closeChatButton = document.querySelector("#close-chat-page-button")
 var currentChatId = null
 
-closeChatPage.onclick = (event) => {
+closeChatButton.onclick = (event) => {
     chatPage.classList.add('hidden');
     newChatPage.classList.remove('hidden');
     chatListPage.classList.remove('hidden');
@@ -697,9 +708,9 @@ function onClickDeleteChat(event) {
         stompClient.send("/app/chat-rooms:delete", {}, JSON.stringify(payloadChatOnDelete));
     } else {
         var payloadUserOnDelete = {
-        username: currentUsername,
-        chatRoomId: currentSettingsChatId
-    };
+            username: currentUsername,
+            chatRoomId: currentSettingsChatId
+        };
         stompClient.send('/app/chat-rooms/users:delete', {}, JSON.stringify(payloadUserOnDelete));
     }
     deleteChat(currentChat.id);
@@ -722,6 +733,7 @@ deleteUserAccountButton.onclick = (event) => {
 
 function onClickDeleteUserAccount(event) {
     stompClient.send("/app/users:delete", {}, {});
+
     if (chatRoomsSubscription) {
         chatRoomsSubscription.unsubscribe();
     }
@@ -747,7 +759,7 @@ function onClickDeleteUserAccount(event) {
         stompClient.disconnect();
         stompClient = null;
     }
-    logout();
+    clearPage();
 
 }
 
