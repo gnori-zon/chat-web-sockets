@@ -10,18 +10,18 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import static org.gnori.chatwebsockets.api.constant.Endpoint.*;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-public class WebSecurityConfig implements WebMvcConfigurer {
+public class WebSecurityConfig {
 
     private final UserDetailsService userDetailsService;
+    private final AuthenticationFailureHandler failureHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -37,12 +37,12 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                         login -> login
                                 .loginPage(START_PAGE_PATH)
                                 .loginProcessingUrl((USERS + SIGN_IN_PATH))
+                                .failureHandler(failureHandler)
                 )
-                .logout(logout ->
-                        logout
-                                .logoutRequestMatcher(new AntPathRequestMatcher(LOGOUT_PATH))
-                                .deleteCookies("SESSION")
-                                .logoutSuccessUrl(START_PAGE_PATH)
+                .logout(logout -> logout
+                        .logoutRequestMatcher(new AntPathRequestMatcher(LOGOUT_PATH))
+                        .deleteCookies("SESSION")
+                        .logoutSuccessUrl(START_PAGE_PATH)
                 )
                 .userDetailsService(userDetailsService);
 
@@ -53,10 +53,4 @@ public class WebSecurityConfig implements WebMvcConfigurer {
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-    @Override
-    public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addViewController(START_PAGE_PATH).setViewName("index.html");
-    }
-
 }
