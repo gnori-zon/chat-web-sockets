@@ -117,19 +117,34 @@ function logout() {
     })
         .then(response => {
             console.log(response.status)
+            if (chatRoomsSubscription) {
+                chatRoomsSubscription.unsubscribe();
+            }
+            if (chatRoomsUpdateSubscription) {
+                chatRoomsUpdateSubscription.unsubscribe();
+            }
+            if (errorSubscription) {
+                errorSubscription.unsubscribe();
+            }
+            if (messageSubscription) {
+                messageSubscription.unsubscribe();
+            }
+            if (usersSubscription) {
+                usersSubscription.unsubscribe();
+            }
+            if (oldMessageSubscription) {
+                oldMessageSubscription.unsubscribe();
+            }
+            if (updateMessageSubscription) {
+                updateMessageSubscription.unsubscribe();
+            }
+            if (stompClient) {
+                stompClient.disconnect();
+                stompClient = null;
+            }
             clearPage()
         })
         .catch(err => console.log(err))
-    fetch(MAIN_HOST, {
-        method: 'GET'
-    }).then(response => {
-        console.log(response.status)
-
-        if (response.redirected) {
-            chatListPage.classList.add('hidden');
-            currentUsername = ''
-        }
-    })
 }
 
 function connect() {
@@ -821,6 +836,13 @@ function onClickConfirmChangePassword(event) {
 }
 
 var currentUser = null;
+
+var logoutButton = document.querySelector('#logout-button')
+
+logoutButton.onclick = (event) => {
+    logout();
+}
+
 
 function onUserDataReceived(payload) {
     currentUser = JSON.parse(payload.body);

@@ -9,7 +9,6 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationFa
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 @Slf4j
@@ -22,11 +21,9 @@ public class AuthFailureHandler extends SimpleUrlAuthenticationFailureHandler {
             HttpServletResponse response,
             AuthenticationException exception
     ) throws IOException {
-        response.setContentType(contentTypeWithCharset(MediaType.TEXT_HTML, StandardCharsets.UTF_8));
+        response.setContentType(
+                ResposeHandlerUtils.contentTypeWithCharset(MediaType.TEXT_HTML, StandardCharsets.UTF_8)
+        );
         response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication Failed. Wrong username or password or both");
-    }
-
-    private static String contentTypeWithCharset(MediaType type, Charset charset) {
-        return String.format("%s;charset=%s", type, charset);
     }
 }

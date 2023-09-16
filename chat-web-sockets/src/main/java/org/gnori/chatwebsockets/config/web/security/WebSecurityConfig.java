@@ -1,6 +1,7 @@
 package org.gnori.chatwebsockets.config.web.security;
 
 import lombok.RequiredArgsConstructor;
+import org.gnori.chatwebsockets.api.handler.LogoutSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -21,7 +22,8 @@ import static org.gnori.chatwebsockets.api.constant.Endpoint.*;
 public class WebSecurityConfig {
 
     private final UserDetailsService userDetailsService;
-    private final AuthenticationFailureHandler failureHandler;
+    private final AuthenticationFailureHandler authFailureHandler;
+    private final LogoutSuccessHandler logoutSuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -37,12 +39,12 @@ public class WebSecurityConfig {
                         login -> login
                                 .loginPage(START_PAGE_PATH)
                                 .loginProcessingUrl((USERS + SIGN_IN_PATH))
-                                .failureHandler(failureHandler)
+                                .failureHandler(authFailureHandler)
                 )
                 .logout(logout -> logout
                         .logoutRequestMatcher(new AntPathRequestMatcher(LOGOUT_PATH))
                         .deleteCookies("SESSION")
-                        .logoutSuccessUrl(START_PAGE_PATH)
+                        .logoutSuccessHandler(logoutSuccessHandler)
                 )
                 .userDetailsService(userDetailsService);
 

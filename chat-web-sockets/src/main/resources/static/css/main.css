@@ -183,8 +183,11 @@ form {
 .edit-chat-page-container,
 .new-chat-page-container,
 .user-settings-container,
-.user-edit-container {
+.user-edit-container,
+.logout-container {
     max-width: 500px;
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
 
 .chat-container {
