@@ -65,6 +65,9 @@ function authRequest(username, password) {
                 chatListPage.classList.remove('hidden');
                 currentUsername = username
                 connect();
+            } else if (response.status === 401) {
+                displayError("Bad authorize credentials");
+                choosePage.classList.remove("hidden")
             }
         })
         .catch(err => console.log(err))
@@ -139,13 +142,17 @@ function onConnected(options) {
 
 var errorElement = document.querySelector('#error-message')
 
-function onError(error) {
-    errorElement.textContent = 'Could not connect to WebSocket server. Please refresh this page to try again!';
-    errorElement.style.color = 'red' + error.toString();
+function displayError(errorMessage) {
+    errorElement.textContent = errorMessage;
+    errorElement.style.color = 'red';
     errorElement.classList.remove('hidden');
     setTimeout(() => {
         errorElement.classList.add('hidden');
     }, 5500);
+}
+
+function onError(error) {
+    displayError(error.toString())
 }
 
 function onBusinessError(payload) {
