@@ -98,7 +98,6 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
                 List.of(userEntity)
         );
 
-
         final List<String> chatIds = userEntity.getChatIds();
         chatIds.add(chatRoom.getId());
 
@@ -131,7 +130,7 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
         final String username = payload.getUsername();
         final ChatRoom chatRoom = getChatRoomOrElseThrow(chatRoomId);
 
-        if (user.getUsername().equals(chatRoom.getOwnerUsername()) && !user.getUsername().equals(username)) {
+        if (isCanBeDeleted(chatRoom, user, username)) {
             if (isNotBlankList(chatRoom.getConnectedUsers())) {
                 final User deletingUser = userRepository.findByUsername(username)
                         .orElseThrow(NotFoundException::new);
@@ -145,6 +144,14 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
             return converter.convertFrom(chatRoom);
         }
         throw new ForbiddenException();
+    }
+
+    private boolean isCanBeDeleted(ChatRoom chatRoom, CustomUserDetails user, String username) {
+        if (user.getUsername().equals(chatRoom.getOwnerUsername())) {
+            return !user.getUsername().equals(username);
+        } else {
+            return user.getUsername().equals(username);
+        }
     }
 
     @Override

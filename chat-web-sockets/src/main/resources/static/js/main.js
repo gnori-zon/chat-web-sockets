@@ -689,11 +689,20 @@ function updateChat(event) {
 
 function onClickDeleteChat(event) {
     chatSettingsPage.classList.add('hidden');
-    deleteChat(currentChat.id);
-    var chatRoomDto = {
+
+    if (currentChat.owner === currentUsername) {
+        var payloadChatOnDelete = {
+            chatRoomId: currentSettingsChatId
+        };
+        stompClient.send("/app/chat-rooms:delete", {}, JSON.stringify(payloadChatOnDelete));
+    } else {
+        var payloadUserOnDelete = {
+        username: currentUsername,
         chatRoomId: currentSettingsChatId
     };
-    stompClient.send("/app/chat-rooms:delete", {}, JSON.stringify(chatRoomDto));
+        stompClient.send('/app/chat-rooms/users:delete', {}, JSON.stringify(payloadUserOnDelete));
+    }
+    deleteChat(currentChat.id);
     currentSettingsChatId = null;
 }
 
