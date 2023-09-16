@@ -20,6 +20,7 @@ import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -124,6 +125,7 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
     private User createFrom(CreateUserPayload payload) {
         final User user = createFrom(payload.getUsername(), payload.getPassword(), payload.getName(), payload.getEmail());
         user.setRoles(List.of(Role.USER));
+        user.setChatIds(new ArrayList<>());
         return user;
     }
 
