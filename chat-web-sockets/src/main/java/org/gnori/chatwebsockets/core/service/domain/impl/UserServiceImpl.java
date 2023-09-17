@@ -78,12 +78,9 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
     }
 
     @Override
-    public UserDto adminUpdateById(UpdateAdminUserPayload payload) {
-        final User oldUserEntity = repository.findById(payload.getId()).orElseThrow(NotFoundException::new);
-        if (isNewUsernameAndSomeoneElseHasIt(payload.getUsername(), oldUserEntity.getUsername()))
-            throw new ConflictException(EXIST_USERNAME_EX);
+    public UserDto adminUpdateByUsername(UpdateAdminUserPayload payload) {
+        final User oldUserEntity = repository.findByUsername(payload.getUsername()).orElseThrow(NotFoundException::new);
 
-        oldUserEntity.setUsername(payload.getUsername());
         oldUserEntity.setName(payload.getName());
         oldUserEntity.setEmail(payload.getEmail());
         oldUserEntity.setRoles(payload.getRoleList());
@@ -104,12 +101,8 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
     }
 
     @Override
-    public void adminDelete(Long id) {
-        repository.deleteById(id);
-    }
-
-    private boolean isNewUsernameAndSomeoneElseHasIt(String dtoUsername, String username) {
-        return !dtoUsername.equals(username) && repository.existsByUsername(dtoUsername);
+    public void adminDelete(String username) {
+        repository.deleteByUsername(username);
     }
 
     private boolean isNotValidOldPass(ChangePasswordUserPayload payload, CustomUserDetails user) {

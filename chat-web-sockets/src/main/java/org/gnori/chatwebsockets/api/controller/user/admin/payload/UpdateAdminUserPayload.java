@@ -9,6 +9,5 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PROTECTED)
 public class UpdateAdminUserPayload extends AdminUserPayload {
-    Long id;
     String username;
 }

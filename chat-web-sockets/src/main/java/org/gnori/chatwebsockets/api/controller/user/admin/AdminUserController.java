@@ -41,7 +41,8 @@ public class AdminUserController extends BaseWebSocketController {
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
 
-                    doIfAdmin(user,
+                    doIfAdmin(
+                            user,
                             () -> {
                                 final UserDto createUser = userService.adminCreate(payload);
 
@@ -63,9 +64,10 @@ public class AdminUserController extends BaseWebSocketController {
         doIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
-                    doIfAdmin(user,
+                    doIfAdmin(
+                            user,
                             () -> {
-                                final UserDto updatedUserDto = userService.adminUpdateById(payload);
+                                final UserDto updatedUserDto = userService.adminUpdateByUsername(payload);
 
                                 simpMessagingTemplate.convertAndSend(
                                         String.format(TOPIC_ADMIN_USER, user.getUsername()),
@@ -79,13 +81,16 @@ public class AdminUserController extends BaseWebSocketController {
 
     @MessageMapping(ADMIN_USERS + DELETE_PATH)
     public void delete(
-            @Payload Long id,
+            @Payload String username,
             SimpMessageHeaderAccessor headerAccessor
     ) {
         doIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
-                    doIfAdmin(user, () -> userService.adminDelete(id));
+                    doIfAdmin(
+                            user,
+                            () -> userService.adminDelete(username)
+                    );
                 }
         );
     }

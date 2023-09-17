@@ -9,7 +9,6 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PROTECTED)
 public class CreateAdminUserPayload extends AdminUserPayload {
-    Long id;
     String password;
     String username;
 }
