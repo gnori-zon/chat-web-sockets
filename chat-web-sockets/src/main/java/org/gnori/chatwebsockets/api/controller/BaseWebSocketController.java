@@ -13,7 +13,7 @@ public abstract  class BaseWebSocketController {
 
     protected final SimpMessagingTemplate simpMessagingTemplate;
 
-    protected void doIfSessionAttrsIsPresent(SimpMessageHeaderAccessor headerAccessor, Consumer<Map<String, Object>> consumer) {
+    protected void executeIfSessionAttrsIsPresent(SimpMessageHeaderAccessor headerAccessor, Consumer<Map<String, Object>> consumer) {
         Optional.ofNullable(headerAccessor.getSessionAttributes())
                 .ifPresent(consumer);
     }

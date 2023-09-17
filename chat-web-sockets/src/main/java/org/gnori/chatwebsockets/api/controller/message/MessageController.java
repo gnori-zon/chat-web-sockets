@@ -36,7 +36,7 @@ public class MessageController extends BaseWebSocketController {
             @Payload MessagePayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        doIfSessionAttrsIsPresent(headerAccessor,
+        executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final String chatRoomId = payload.getChatRoomId();
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
@@ -55,7 +55,7 @@ public class MessageController extends BaseWebSocketController {
             @Payload CreateMessagePayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        doIfSessionAttrsIsPresent(headerAccessor,
+        executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final String chatRoomId = payload.getChatRoomId();
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
@@ -74,7 +74,7 @@ public class MessageController extends BaseWebSocketController {
             @Payload UpdateMessagePayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        doIfSessionAttrsIsPresent(headerAccessor,
+        executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final String chatRoomId = payload.getChatRoomId();
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
@@ -93,7 +93,7 @@ public class MessageController extends BaseWebSocketController {
             @Payload MessagePayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        doIfSessionAttrsIsPresent(headerAccessor,
+        executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final String chatRoomId = payload.getChatRoomId();
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());

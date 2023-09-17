@@ -31,7 +31,7 @@ public class UserChatRoomController extends BaseWebSocketController {
             @Payload UserChatRoomPayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        doIfSessionAttrsIsPresent(headerAccessor,
+        executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     final ChatRoomDto chatRoomDto = chatRoomService.addUser(payload, user);
@@ -53,7 +53,7 @@ public class UserChatRoomController extends BaseWebSocketController {
             @Payload UserChatRoomPayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        doIfSessionAttrsIsPresent(headerAccessor,
+        executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     final ChatRoomDto chatRoomDto = chatRoomService.deleteUser(payload, user);

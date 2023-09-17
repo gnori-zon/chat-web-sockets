@@ -35,7 +35,7 @@ public class ChatRoomController extends BaseWebSocketController {
     public void getForUser(
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        doIfSessionAttrsIsPresent(headerAccessor,
+        executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     final List<ChatRoomDto> chatRoomDtoAll = chatRoomService.getAll(user);
@@ -53,7 +53,7 @@ public class ChatRoomController extends BaseWebSocketController {
             @Payload ChatRoomPayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        doIfSessionAttrsIsPresent(headerAccessor,
+        executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     final ChatRoomDto chatRoomDto = chatRoomService.get(payload, user);
@@ -71,7 +71,7 @@ public class ChatRoomController extends BaseWebSocketController {
             @Payload CreateChatRoomPayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        doIfSessionAttrsIsPresent(headerAccessor,
+        executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     final ChatRoomDto createdChatRoomDto = chatRoomService.create(payload, user);
@@ -89,7 +89,7 @@ public class ChatRoomController extends BaseWebSocketController {
             @Payload UpdateChatRoomPayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        doIfSessionAttrsIsPresent(headerAccessor,
+        executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     final ChatRoomDto chatRoomDto = chatRoomService.update(payload, user);
@@ -110,7 +110,7 @@ public class ChatRoomController extends BaseWebSocketController {
             @Payload ChatRoomPayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        doIfSessionAttrsIsPresent(headerAccessor,
+        executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     final ChatRoomDto chatRoomDto = chatRoomService.delete(payload, user);

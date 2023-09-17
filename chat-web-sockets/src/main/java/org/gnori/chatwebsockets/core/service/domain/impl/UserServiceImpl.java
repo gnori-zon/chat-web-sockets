@@ -67,7 +67,7 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
 
     @Override
     public UserDto changePassword(ChangePasswordUserPayload payload, CustomUserDetails user) {
-        if (isNotValidOldPass(payload, user)) throw new ConflictException("Not valid old password");
+        if (isNotValidOldPassword(payload, user)) throw new ConflictException("Not valid old password");
         final Long userId = user.getUserId();
         final User userEntity = repository.findById(userId)
                 .orElseThrow(NotFoundException::new);
@@ -105,7 +105,7 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
         repository.deleteByUsername(username);
     }
 
-    private boolean isNotValidOldPass(ChangePasswordUserPayload payload, CustomUserDetails user) {
+    private boolean isNotValidOldPassword(ChangePasswordUserPayload payload, CustomUserDetails user) {
         return !bCryptPasswordEncoder.matches(payload.getOldPassword(), user.getPassword());
     }
 

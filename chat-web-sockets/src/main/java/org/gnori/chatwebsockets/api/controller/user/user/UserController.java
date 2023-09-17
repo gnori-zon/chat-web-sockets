@@ -43,7 +43,7 @@ public class UserController extends BaseWebSocketController {
     public void delete(
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        doIfSessionAttrsIsPresent(headerAccessor,
+        executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     userService.delete(user);
@@ -56,7 +56,7 @@ public class UserController extends BaseWebSocketController {
             @Payload UserPayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        doIfSessionAttrsIsPresent(headerAccessor,
+        executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     final UserDto updatedUserDto = userService.update(payload, user);
@@ -74,7 +74,7 @@ public class UserController extends BaseWebSocketController {
             @Payload ChangePasswordUserPayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        doIfSessionAttrsIsPresent(headerAccessor,
+        executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     final UserDto userDtoWithUpdatedPassword = userService.changePassword(payload, user);
@@ -91,7 +91,7 @@ public class UserController extends BaseWebSocketController {
     public void get(
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        doIfSessionAttrsIsPresent(headerAccessor,
+        executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     final UserDto userDto = userService.get(user);

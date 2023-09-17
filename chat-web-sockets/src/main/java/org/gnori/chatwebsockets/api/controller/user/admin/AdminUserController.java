@@ -37,7 +37,7 @@ public class AdminUserController extends BaseWebSocketController {
             @Payload CreateAdminUserPayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        doIfSessionAttrsIsPresent(headerAccessor,
+        executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
 
@@ -61,7 +61,7 @@ public class AdminUserController extends BaseWebSocketController {
             @Payload UpdateAdminUserPayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        doIfSessionAttrsIsPresent(headerAccessor,
+        executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     doIfAdmin(
@@ -84,7 +84,7 @@ public class AdminUserController extends BaseWebSocketController {
             @Payload String username,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        doIfSessionAttrsIsPresent(headerAccessor,
+        executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     doIfAdmin(
