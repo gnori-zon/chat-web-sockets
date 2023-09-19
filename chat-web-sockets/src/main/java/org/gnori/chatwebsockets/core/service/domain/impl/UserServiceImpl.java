@@ -81,8 +81,28 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
     }
 
     @Override
+    public void delete(CustomUserDetails user) {
+
+        deleteOwnedChatRoom(user);
+        repository.deleteById(user.getUserId());
+    }
+
+    @Override
+    public UserDto adminCreate(CreateAdminUserPayload payload) {
+
+        if (repository.existsByUsername(payload.getUsername())) {
+            throw new ConflictException(EXIST_USERNAME_EX);
+        }
+        final User newUserEntity = createFrom(payload);
+
+        return converter.convertFrom(repository.save(newUserEntity));
+    }
+
+    @Override
     public UserDto adminUpdateByUsername(UpdateAdminUserPayload payload) {
-        final User oldUserEntity = repository.findByUsername(payload.getUsername()).orElseThrow(NotFoundException::new);
+
+        final User oldUserEntity = repository.findByUsername(payload.getUsername())
+                .orElseThrow(NotFoundException::new);
 
         oldUserEntity.setName(payload.getName());
         oldUserEntity.setEmail(payload.getEmail());
@@ -92,23 +112,10 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
     }
 
     @Override
-    public UserDto adminCreate(CreateAdminUserPayload payload) {
-        if (repository.existsByUsername(payload.getUsername())) throw new ConflictException(EXIST_USERNAME_EX);
-        final User newUserEntity = createFrom(payload);
-        return converter.convertFrom(repository.save(newUserEntity));
-    }
-
-    @Override
-    public void delete(CustomUserDetails user) {
-
-        deleteOwnedChatRoom(user);
-        repository.deleteById(user.getUserId());
-    }
-
-    @Override
     public void adminDelete(String username) {
 
-        final User user = repository.findByUsername(username).orElseThrow(NotFoundException::new);
+        final User user = repository.findByUsername(username)
+                .orElseThrow(NotFoundException::new);
 
         deleteOwnedChatRoom(new CustomUserDetails(user));
         repository.delete(user);
@@ -131,15 +138,18 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
     }
 
     private User createFrom(CreateAdminUserPayload payload) {
+
         final User user = createFrom(payload.getUsername(), payload.getPassword(), payload.getName(), payload.getEmail());
         user.setRoles(payload.getRoleList());
+
         return user;
     }
 
     private User createFrom(CreateUserPayload payload) {
+
         final User user = createFrom(payload.getUsername(), payload.getPassword(), payload.getName(), payload.getEmail());
         user.setRoles(List.of(Role.USER));
-        user.setChatIds(new ArrayList<>());
+
         return user;
     }
 
@@ -150,7 +160,8 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
                 bCryptPasswordEncoder.encode(password),
                 name,
                 email,
-                null, null
+                new ArrayList<>(),
+                new ArrayList<>()
         );
     }
 
