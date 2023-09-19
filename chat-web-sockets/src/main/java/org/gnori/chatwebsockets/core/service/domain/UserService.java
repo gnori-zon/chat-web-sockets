@@ -15,7 +15,7 @@ public interface UserService<A> {
     UserDto create(CreateUserPayload payload) throws ConflictException;
     UserDto update(UserPayload payload, A user) throws ConflictException;
     UserDto changePassword(ChangePasswordUserPayload payload, A user) throws ConflictException;
-    UserDto adminUpdateByUsername(UpdateAdminUserPayload payload) throws NotFoundException, ConflictException;
+    UserDto adminUpdate(UpdateAdminUserPayload payload) throws NotFoundException, ConflictException;
     UserDto adminCreate(CreateAdminUserPayload payload) throws ConflictException;
     void delete(A user);
     void adminDelete(String username);

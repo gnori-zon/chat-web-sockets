@@ -99,7 +99,7 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
     }
 
     @Override
-    public UserDto adminUpdateByUsername(UpdateAdminUserPayload payload) {
+    public UserDto adminUpdate(UpdateAdminUserPayload payload) {
 
         final User oldUserEntity = repository.findByUsername(payload.getUsername())
                 .orElseThrow(NotFoundException::new);

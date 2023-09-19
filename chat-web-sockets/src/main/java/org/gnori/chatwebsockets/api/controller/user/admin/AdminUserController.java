@@ -67,7 +67,7 @@ public class AdminUserController extends BaseWebSocketController {
                     doIfAdmin(
                             user,
                             () -> {
-                                final UserDto updatedUserDto = userService.adminUpdateByUsername(payload);
+                                final UserDto updatedUserDto = userService.adminUpdate(payload);
 
                                 simpMessagingTemplate.convertAndSend(
                                         String.format(TOPIC_ADMIN_USER, user.getUsername()),
