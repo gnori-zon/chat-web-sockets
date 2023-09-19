@@ -842,7 +842,6 @@ logoutButton.onclick = (event) => {
     logout();
 }
 
-
 function onUserDataReceived(payload) {
     currentUser = JSON.parse(payload.body);
 
@@ -851,6 +850,62 @@ function onUserDataReceived(payload) {
     userSettingsEmail.textContent = 'email: ' + currentUser.email;
 }
 
+var adminPanel = document.querySelector('#admin-panel')
+var adminCreateUserButton = document.querySelector('#admin-create-user-button')
+var adminUpdateUserButton = document.querySelector('#admin-update-user-button')
+var adminDeleteUserButton = document.querySelector('#admin-delete-user-button')
+
+var adminCreateUserForm = document.querySelector('#admin-create-user-form');
+var adminUpdateUserForm = document.querySelector('#admin-update-user-form');
+var adminDeleteUserForm = document.querySelector('#admin-delete-user-form');
+
+var adminCreateUserUsernameInput = document.querySelector('#admin-create-username');
+var adminCreateUserNameInput = document.querySelector('#admin-create-name');
+var adminCreateUserEmailInput = document.querySelector('#admin-create-email');
+var adminCreateUserRolesInput = document.querySelector('#admin-create-roles');
+var adminCreateUserPasswordInput = document.querySelector('#admin-create-password');
+var adminCreateUserReplyPasswordInput = document.querySelector('#admin-create-reply-password');
+
+adminCreateUserButton.onclick = (event) => {
+    displayElement(adminCreateUserForm);
+    //todo : logic added accept button and back to panel
+    hideAdminChooseButtons();
+}
+
+var adminUpdateUserUsernameInput = document.querySelector('#admin-update-username');
+var adminUpdateUserNameInput = document.querySelector('#admin-update-name');
+var adminUpdateUserEmailInput = document.querySelector('#admin-update-email');
+var adminUpdateUserRolesInput = document.querySelector('#admin-update-roles');
+var adminUpdateSearchUserDataToUpdate = document.querySelector('#admin-update-search-user-data-to-update');
+
+adminUpdateSearchUserDataToUpdate.onclick = () => {
+    //todo : logic search and write to input data or else display error
+}
+
+adminUpdateUserButton.onclick = (event) => {
+    displayElement(adminUpdateUserForm);
+    //todo : logic added accept button and back to panel
+    hideAdminChooseButtons();
+}
+
+var adminDeleteUserUsernameInput = document.querySelector('#admin-delete-username');
+adminDeleteUserButton.onclick = (event) => {
+    displayElement(adminDeleteUserForm);
+    //todo : logic added accept button and back to panel
+    hideAdminChooseButtons();
+}
+
+function hideAdminChooseButtons() {
+    hideElement(adminCreateUserButton);
+    hideElement(adminUpdateUserButton);
+    hideElement(adminDeleteUserButton);
+}
+
+function displayAdminChooseButton() {
+    displayElement(adminCreateUserButton);
+    displayElement(adminUpdateUserButton);
+    displayElement(adminDeleteUserButton);
+}
 
 function displayElement(element: Element) {
     element.classList.remove('hidden');
