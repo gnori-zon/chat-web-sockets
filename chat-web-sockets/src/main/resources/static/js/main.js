@@ -30,14 +30,16 @@ var chooseLoginForm = document.querySelector('#chooseLoginForm');
 var chooseRegistrationForm = document.querySelector('#chooseRegistrationForm');
 
 function chooseLogin(event) {
-    choosePage.classList.add('hidden');
-    loginPage.classList.remove('hidden');
+    hideElement(choosePage);
+    displayElement(loginPage);
+
     event.preventDefault();
 }
 
 function chooseRegistration(event) {
-    choosePage.classList.add('hidden');
-    registrationPage.classList.remove('hidden');
+    hideElement(choosePage);
+    displayElement(registrationPage);
+
     event.preventDefault();
 }
 
@@ -62,28 +64,29 @@ function authRequest(username, password) {
         .then(response => {
             console.log(response.status)
             if (response.redirected) {
-                chatListPage.classList.remove('hidden');
+                displayElement(chatListPage);
                 currentUsername = username
                 connect();
             } else if (response.status === 401) {
                 displayError("Bad authorize credentials");
-                choosePage.classList.remove("hidden")
+                displayElement(choosePage);
             }
         })
         .catch(err => console.log(err))
 }
 
 function clearPage() {
-    chatListPage.classList.add('hidden');
-    newChatPage.classList.add('hidden');
-    chatPage.classList.add('hidden');
-    chatSettingsPage.classList.add('hidden');
-    userSettingsPage.classList.add('hidden');
-    editUserPage.classList.add('hidden');
-    chatEditSettingsPage.classList.add('hidden');
-    registrationPage.classList.add('hidden');
-    loginPage.classList.add('hidden');
-    choosePage.classList.remove('hidden');
+    hideElement(chatListPage);
+    hideElement(newChatPage);
+    hideElement(chatPage);
+    hideElement(chatSettingsPage);
+    hideElement(userSettingsPage);
+    hideElement(editUserPage);
+    hideElement(chatEditSettingsPage);
+    hideElement(registrationPage);
+    hideElement(loginPage);
+
+    displayElement(choosePage);
     currentUsername = ''
 
     userSettingsName.textContent = '';
@@ -161,8 +164,8 @@ function onConnected(options) {
     errorSubscription = stompClient.subscribe('/topic/' + currentUsername + '/errors', onBusinessError);
     stompClient.send('/app/users/self-data');
     stompClient.send('/app/chat-rooms:list');
-    userSettingsPage.classList.remove('hidden')
-    newChatPage.classList.remove('hidden')
+    displayElement(userSettingsPage);
+    displayElement(newChatPage);
 
 }
 
@@ -171,10 +174,12 @@ var errorElement = document.querySelector('#error-message')
 function displayError(errorMessage) {
     errorElement.textContent = errorMessage;
     errorElement.style.color = 'red';
-    errorElement.classList.remove('hidden');
-    setTimeout(() => {
-        errorElement.classList.add('hidden');
-    }, 5500);
+
+    displayElement(errorElement);
+    setTimeout(
+        () => hideElement(errorElement),
+        5500
+    );
 }
 
 function onError(error) {
@@ -182,13 +187,7 @@ function onError(error) {
 }
 
 function onBusinessError(payload) {
-    var error = JSON.parse(payload.body);
-    errorElement.textContent = error.message;
-    errorElement.style.color = 'red';
-    errorElement.classList.remove('hidden');
-    setTimeout(() => {
-        errorElement.classList.add('hidden');
-    }, 5500);
+    displayError(JSON.parse(payload.body).message);
 }
 
 //sign-in
@@ -204,7 +203,7 @@ function login(event) {
         authRequest(username, password)
         document.querySelector('#username-log').value = '';
         document.querySelector('#password-log').value = '';
-        loginPage.classList.add('hidden');
+        hideElement(loginPage);
         event.preventDefault();
     }
 }
@@ -245,7 +244,7 @@ function registrate(event) {
             document.querySelector('#password-reg-2').value = '';
             document.querySelector('#email-reg').value = '';
             document.querySelector('#name-reg').value = '';
-            registrationPage.classList.add('hidden');
+            hideElement(registrationPage);
             console.log(response.status)
         })
             .catch(err => console.log(err))
@@ -308,9 +307,9 @@ var closeChatButton = document.querySelector("#close-chat-page-button")
 var currentChatId = null
 
 closeChatButton.onclick = (event) => {
-    chatPage.classList.add('hidden');
-    newChatPage.classList.remove('hidden');
-    chatListPage.classList.remove('hidden');
+    hideElement(chatPage);
+    displayElement(newChatPage);
+    displayElement(chatListPage);
     if (messageSubscription) {
         messageSubscription.unsubscribe();
     }
@@ -345,9 +344,9 @@ function onSelectChat(event) {
             date: null,
             fromUser: null
         }
-        newChatPage.classList.add('hidden')
-        chatListPage.classList.add('hidden');
-        chatPage.classList.remove('hidden');
+        hideElement(newChatPage);
+        hideElement(chatListPage);
+        displayElement(chatPage);
 
         oldMessageSubscription = stompClient.subscribe(('/topic/' + currentChatId + '/old/messages'), onMessageReceived);
         stompClient.send('/app/old/messages', {}, JSON.stringify(messageDto));
@@ -468,7 +467,7 @@ var oldSelectedMessageText = null
 function onClickEditMessage(event) {
     selectedMessageId = JSON.parse(event.target.id.slice(MESSAGE_ID_EDIT_PREFIX.length));
     oldSelectedMessageText = messageInput.value.trim();
-    confirmEditMessageButton.classList.remove('hidden')
+    displayElement(confirmEditMessageButton);
     var existMessage = document.querySelector('li:has(#' + utf16ToUtf8(event.target.id) + ')>p');
     if (existMessage) {
         messageInput.value = existMessage.textContent
@@ -489,7 +488,7 @@ function onClickConfirmEditMessage(event) {
         }
         messageInput.value = '';
         selectedMessageId = null;
-        confirmEditMessageButton.classList.add('hidden')
+        hideElement(confirmEditMessageButton);
     }
 }
 
@@ -590,24 +589,24 @@ addUserInChatForm.addEventListener('submit', onClickAddUserInChat, true)
 var currentChat = null
 
 closeChatSettingsPageButton.onclick = (event) => {
-    chatSettingsPage.classList.add("hidden");
-    newChatPage.classList.remove('hidden');
+    hideElement(chatSettingsPage);
+    displayElement(newChatPage);
 }
 
 backToSettingChatPage.onclick = () => {
-    chatSettingsPage.classList.remove("hidden");
-    chatEditSettingsPage.classList.add("hidden");
+    displayElement(chatSettingsPage);
+    hideElement(chatEditSettingsPage);
 }
 
 function onSelectSettingChat(event) {
-    newChatPage.classList.add('hidden')
+    hideElement(newChatPage);
     currentSettingsChatId = event.target.id.slice(CHAT_ID_SETTINGS_PREFIX.length);
     console.log(currentSettingsChatId);
     displaySettingsChat();
 }
 
 function displaySettingsChat() {
-    chatSettingsPage.classList.remove('hidden');
+    displayElement(chatSettingsPage);
     if (chats.has(currentSettingsChatId)) {
         currentChat = chats.get(currentSettingsChatId);
 
@@ -626,9 +625,9 @@ function displaySettingsChat() {
                 currentChat.connectedUsers.forEach(user => writeUserToSettings(user))
             }
             if (currentUsername === currentChat.ownerUsername) {
-                editChatSettingsButton.classList.remove('hidden');
+                displayElement(editChatSettingsButton);
             } else {
-                editChatSettingsButton.classList.add('hidden');
+                hideElement(editChatSettingsButton);
             }
         }
     }
@@ -687,8 +686,8 @@ var editChatName = document.querySelector("#editChatName")
 var editChatDescription = document.querySelector("#editChatDescription")
 
 function onClickEditChatSettings(event) {
-    chatSettingsPage.classList.add('hidden');
-    chatEditSettingsPage.classList.remove('hidden');
+    hideElement(chatSettingsPage);
+    displayElement(chatEditSettingsPage);
     editChatName.setAttribute("value", currentChat.name);
     editChatDescription.setAttribute("value", currentChat.description);
 }
@@ -705,7 +704,7 @@ function updateChat(event) {
             description: chatDescription
         };
         stompClient.send("/app/chat-rooms:update", {}, JSON.stringify(chatRoomDto));
-        chatEditSettingsPage.classList.add('hidden');
+        hideElement(chatEditSettingsPage);
         editChatName.value = ''
         editChatDescription.value = ''
         currentSettingsChatId = null
@@ -714,7 +713,7 @@ function updateChat(event) {
 }
 
 function onClickDeleteChat(event) {
-    chatSettingsPage.classList.add('hidden');
+    hideElement(chatSettingsPage);
 
     if (currentChat.owner === currentUsername) {
         var payloadChatOnDelete = {
@@ -790,7 +789,7 @@ var userNewPassword1 = document.querySelector("#change-new-password1");
 var userNewPassword2 = document.querySelector("#change-new-password2");
 
 function onClickEditUserAccount(event) {
-    editUserPage.classList.remove('hidden');
+    displayElement(editUserPage);
     stompClient.send()
     editUserName.value = currentUser.name;
     editUserEmail.value = currentUser.email;
@@ -811,7 +810,7 @@ function onClickConfirmEditUser(event) {
         stompClient.send('/app/users:update', {}, JSON.stringify(payload));
         editUserName.value = '';
         editUserEmail.value = '';
-        editUserPage.classList.add('hidden');
+        hideElement(editUserPage);
     }
     event.preventDefault();
 }
@@ -830,7 +829,7 @@ function onClickConfirmChangePassword(event) {
         userOldPassword.value = '';
         userNewPassword1.value = '';
         userNewPassword2.value = '';
-        editUserPage.classList.add('hidden');
+        hideElement(editUserPage);
     }
     event.preventDefault();
 }
@@ -850,6 +849,15 @@ function onUserDataReceived(payload) {
     userSettingsUsername.textContent = 'username: ' + currentUser.username;
     userSettingsName.textContent = 'name: ' + currentUser.name;
     userSettingsEmail.textContent = 'email: ' + currentUser.email;
+}
+
+
+function displayElement(element: Element) {
+    element.classList.remove('hidden');
+}
+
+function hideElement(element: Element) {
+    element.classList.add('hidden');
 }
 
 var colors = [
