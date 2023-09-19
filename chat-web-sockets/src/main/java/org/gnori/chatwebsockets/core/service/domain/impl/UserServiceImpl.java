@@ -3,6 +3,7 @@ package org.gnori.chatwebsockets.core.service.domain.impl;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.gnori.chatwebsockets.api.controller.chatroom.payload.ChatRoomPayload;
 import org.gnori.chatwebsockets.api.controller.user.admin.payload.CreateAdminUserPayload;
 import org.gnori.chatwebsockets.api.controller.user.admin.payload.UpdateAdminUserPayload;
 import org.gnori.chatwebsockets.api.controller.user.payload.UserPayload;
@@ -15,6 +16,7 @@ import org.gnori.chatwebsockets.core.domain.user.enums.Role;
 import org.gnori.chatwebsockets.core.exception.impl.ConflictException;
 import org.gnori.chatwebsockets.core.exception.impl.NotFoundException;
 import org.gnori.chatwebsockets.core.repository.UserRepository;
+import org.gnori.chatwebsockets.core.service.domain.ChatRoomService;
 import org.gnori.chatwebsockets.core.service.domain.UserService;
 import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -30,6 +32,7 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
 
     private static final String EXIST_USERNAME_EX = "User with this username already exist";
 
+    ChatRoomService<CustomUserDetails> chatRoomService;
     BCryptPasswordEncoder bCryptPasswordEncoder;
     UserRepository repository;
     UserConverter converter;
@@ -97,12 +100,30 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
 
     @Override
     public void delete(CustomUserDetails user) {
+
+        deleteOwnedChatRoom(user);
         repository.deleteById(user.getUserId());
     }
 
     @Override
     public void adminDelete(String username) {
-        repository.deleteByUsername(username);
+
+        final User user = repository.findByUsername(username).orElseThrow(NotFoundException::new);
+
+        deleteOwnedChatRoom(new CustomUserDetails(user));
+        repository.delete(user);
+    }
+
+    private void deleteOwnedChatRoom(CustomUserDetails user) {
+
+        chatRoomService.getAll(user)
+                .forEach(
+                        chat -> {
+                            if (user.getUsername().equals(chat.getOwnerUsername())) {
+                                chatRoomService.delete(new ChatRoomPayload(chat.getId()), user);
+                            }
+                        }
+                );
     }
 
     private boolean isNotValidOldPassword(ChangePasswordUserPayload payload, CustomUserDetails user) {
