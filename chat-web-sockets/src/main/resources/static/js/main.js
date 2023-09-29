@@ -848,6 +848,11 @@ function onUserDataReceived(payload) {
     userSettingsUsername.textContent = 'username: ' + currentUser.username;
     userSettingsName.textContent = 'name: ' + currentUser.name;
     userSettingsEmail.textContent = 'email: ' + currentUser.email;
+
+
+    if (currentUser.roles.includes('ADMIN')) {
+        displayElement(adminPanel)
+    }
 }
 
 var adminPanel = document.querySelector('#admin-panel')
@@ -907,11 +912,11 @@ function displayAdminChooseButton() {
     displayElement(adminDeleteUserButton);
 }
 
-function displayElement(element: Element) {
+function displayElement(element) {
     element.classList.remove('hidden');
 }
 
-function hideElement(element: Element) {
+function hideElement(element) {
     element.classList.add('hidden');
 }
 

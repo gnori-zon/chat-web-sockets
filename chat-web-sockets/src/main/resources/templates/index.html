@@ -221,39 +221,37 @@
         </form>
 
     </div>
-
-    <div id="admin-panel">
-        <button id="admin-create-user-button">create user</button>
-        <div id="admin-create-user-form"  class="form-group hidden">
-            <input type="text" id="admin-create-username" placeholder="username..."/>
-            <input type="text" id="admin-create-name" placeholder="name..."/>
-            <input type="email" id="admin-create-email" placeholder="email..."/>
-            <input type="text" id="admin-create-roles" placeholder="roles..."/>
-            <input type="password" id="admin-create-password" placeholder="password..."/>
-            <input type="password" id="admin-create-reply-password" placeholder="reply password..."/>
+</div>
+<div id="admin-panel" class="hidden">
+    <button id="admin-create-user-button">create user</button>
+    <div id="admin-create-user-form"  class="form-group hidden">
+        <input type="text" id="admin-create-username" placeholder="username..."/>
+        <input type="text" id="admin-create-name" placeholder="name..."/>
+        <input type="email" id="admin-create-email" placeholder="email..."/>
+        <input type="text" id="admin-create-roles" placeholder="roles..."/>
+        <input type="password" id="admin-create-password" placeholder="password..."/>
+        <input type="password" id="admin-create-reply-password" placeholder="reply password..."/>
+    </div>
+    <button id="admin-update-user-button">edit user</button>
+    <div id="admin-update-user-form"  class="form-group hidden">
+        <div>
+            <input type="text" id="admin-update-username" placeholder="username..."/>
+            <button id="admin-update-search-user-data-to-update" type="submit" >👤🔍</button>
         </div>
-        <button id="admin-update-user-button">edit user</button>
-        <div id="admin-update-user-form"  class="form-group hidden">
-            <div>
-                <input type="text" id="admin-update-username" placeholder="username..."/>
-                <button id="admin-update-search-user-data-to-update" type="submit" >👤🔍</button>
-            </div>
-            <div>
-                <input type="text" id="admin-update-name" placeholder="name..."/>
-            </div>
-            <div>
-                <input type="email" id="admin-update-email" placeholder="email..."/>
-            </div>
-            <div>
-                <input type="text" id="admin-update-roles" placeholder="roles..."/>
-            </div>
+        <div>
+            <input type="text" id="admin-update-name" placeholder="name..."/>
         </div>
-        <button id="admin-delete-user-button">delete user</button>
-        <div id="admin-delete-user-form"  class="form-group hidden">
-            <input type="text" id="admin-delete-username" placeholder="username..."/>
+        <div>
+            <input type="email" id="admin-update-email" placeholder="email..."/>
+        </div>
+        <div>
+            <input type="text" id="admin-update-roles" placeholder="roles..."/>
         </div>
     </div>
-
+    <button id="admin-delete-user-button">delete user</button>
+    <div id="admin-delete-user-form"  class="form-group hidden">
+        <input type="text" id="admin-delete-username" placeholder="username..."/>
+    </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
