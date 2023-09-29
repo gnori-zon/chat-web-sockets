@@ -6,11 +6,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.gnori.chatwebsockets.core.domain.user.enums.Role;
+
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PROTECTED)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserDto implements AbstractDto<Long> {
 
@@ -21,4 +24,6 @@ public class UserDto implements AbstractDto<Long> {
     String name;
 
     String email;
+
+    List<Role> roles;
 }

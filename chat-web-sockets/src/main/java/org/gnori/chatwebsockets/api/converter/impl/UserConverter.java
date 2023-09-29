@@ -10,6 +10,7 @@ public class UserConverter implements AbstractConverter<UserDto, User> {
 
     @Override
     public User convertFrom(UserDto dto) {
+
         return new User(
                 dto.getUsername(),
                 null,
@@ -22,11 +23,13 @@ public class UserConverter implements AbstractConverter<UserDto, User> {
 
     @Override
     public UserDto convertFrom(User entity) {
+
         return new UserDto(
                 entity.getId(),
                 entity.getUsername(),
                 entity.getName(),
-                entity.getEmail()
+                entity.getEmail(),
+                entity.getRoles()
         );
     }
 }
