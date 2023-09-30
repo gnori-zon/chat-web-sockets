@@ -223,7 +223,7 @@
     </div>
 </div>
 <div id="admin-panel" class="hidden">
-    <button id="admin-create-user-button">create user</button>
+    <button id="admin-create-user-button" class="primary">create user</button>
     <div id="admin-create-user-form"  class="form-group hidden">
         <input type="text" id="admin-create-username" placeholder="username..."/>
         <input type="text" id="admin-create-name" placeholder="name..."/>
@@ -231,8 +231,11 @@
         <input type="text" id="admin-create-roles" placeholder="roles..."/>
         <input type="password" id="admin-create-password" placeholder="password..."/>
         <input type="password" id="admin-create-reply-password" placeholder="reply password..."/>
+        <button id="confirm-admin-create-user" class="hidden">✔</button>
+        <button id="back-to-admin-choose-buttons-from-create">←</button>
     </div>
-    <button id="admin-update-user-button">edit user</button>
+
+    <button id="admin-update-user-button" class="primary">edit user</button>
     <div id="admin-update-user-form"  class="form-group hidden">
         <div>
             <input type="text" id="admin-update-username" placeholder="username..."/>
@@ -247,10 +250,15 @@
         <div>
             <input type="text" id="admin-update-roles" placeholder="roles..."/>
         </div>
+        <button id="confirm-admin-update-user" class="hidden">✔</button>
+        <button id="back-to-admin-choose-buttons-from-update">←</button>
     </div>
-    <button id="admin-delete-user-button">delete user</button>
+
+    <button id="admin-delete-user-button" class="primary">delete user</button>
     <div id="admin-delete-user-form"  class="form-group hidden">
         <input type="text" id="admin-delete-username" placeholder="username..."/>
+        <button id="confirm-admin-delete-user" class="hidden">✔</button>
+        <button id="back-to-admin-choose-buttons-from-delete">←</button>
     </div>
 </div>
 
