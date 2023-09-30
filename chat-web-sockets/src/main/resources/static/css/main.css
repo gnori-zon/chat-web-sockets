@@ -171,7 +171,8 @@ form {
 #new-chat-page,
 #chat-page,
 #user-settings-page,
-#user-edit-page {
+#user-edit-page ,
+#admin-panel {
     background-color: #f2f2f2;
     padding: 20px;
 }
@@ -184,7 +185,8 @@ form {
 .new-chat-page-container,
 .user-settings-container,
 .user-edit-container,
-.logout-container {
+.logout-container,
+.admin-panel-container {
     max-width: 500px;
     padding-top: 10px;
     padding-bottom: 10px;
