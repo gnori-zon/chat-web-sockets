@@ -1,6 +1,7 @@
 package org.gnori.chatwebsockets.core.service.domain;
 
 import org.gnori.chatwebsockets.api.controller.user.admin.payload.CreateAdminUserPayload;
+import org.gnori.chatwebsockets.api.controller.user.admin.payload.DeleteAdminUserPayload;
 import org.gnori.chatwebsockets.api.controller.user.admin.payload.UpdateAdminUserPayload;
 import org.gnori.chatwebsockets.api.controller.user.payload.UserPayload;
 import org.gnori.chatwebsockets.api.controller.user.user.payload.ChangePasswordUserPayload;
@@ -15,8 +16,9 @@ public interface UserService<A> {
     UserDto create(CreateUserPayload payload) throws ConflictException;
     UserDto update(UserPayload payload, A user) throws ConflictException;
     UserDto changePassword(ChangePasswordUserPayload payload, A user) throws ConflictException;
+    void delete(A user);
+
     UserDto adminUpdate(UpdateAdminUserPayload payload) throws NotFoundException, ConflictException;
     UserDto adminCreate(CreateAdminUserPayload payload) throws ConflictException;
-    void delete(A user);
-    void adminDelete(String username);
+    void adminDelete(DeleteAdminUserPayload payload);
 }

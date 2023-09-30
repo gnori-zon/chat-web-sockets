@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.gnori.chatwebsockets.api.controller.chatroom.payload.ChatRoomPayload;
 import org.gnori.chatwebsockets.api.controller.user.admin.payload.CreateAdminUserPayload;
+import org.gnori.chatwebsockets.api.controller.user.admin.payload.DeleteAdminUserPayload;
 import org.gnori.chatwebsockets.api.controller.user.admin.payload.UpdateAdminUserPayload;
 import org.gnori.chatwebsockets.api.controller.user.payload.UserPayload;
 import org.gnori.chatwebsockets.api.controller.user.user.payload.ChangePasswordUserPayload;
@@ -112,9 +113,9 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
     }
 
     @Override
-    public void adminDelete(String username) {
+    public void adminDelete(DeleteAdminUserPayload payload) {
 
-        final User user = repository.findByUsername(username)
+        final User user = repository.findByUsername(payload.getUsername())
                 .orElseThrow(NotFoundException::new);
 
         deleteOwnedChatRoom(new CustomUserDetails(user));

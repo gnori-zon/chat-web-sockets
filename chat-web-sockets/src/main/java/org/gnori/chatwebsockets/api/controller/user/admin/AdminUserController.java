@@ -1,9 +1,11 @@
 package org.gnori.chatwebsockets.api.controller.user.admin;
 
 import lombok.AccessLevel;
+import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 import org.gnori.chatwebsockets.api.controller.BaseWebSocketController;
 import org.gnori.chatwebsockets.api.controller.user.admin.payload.CreateAdminUserPayload;
+import org.gnori.chatwebsockets.api.controller.user.admin.payload.DeleteAdminUserPayload;
 import org.gnori.chatwebsockets.api.controller.user.admin.payload.UpdateAdminUserPayload;
 import org.gnori.chatwebsockets.api.dto.UserDto;
 import org.gnori.chatwebsockets.core.domain.user.enums.Role;
@@ -81,7 +83,7 @@ public class AdminUserController extends BaseWebSocketController {
 
     @MessageMapping(ADMIN_USERS + DELETE_PATH)
     public void delete(
-            @Payload String username,
+            @Payload DeleteAdminUserPayload deleteAdminUserPayload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
         executeIfSessionAttrsIsPresent(headerAccessor,
@@ -89,13 +91,14 @@ public class AdminUserController extends BaseWebSocketController {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     doIfAdmin(
                             user,
-                            () -> userService.adminDelete(username)
+                            () -> userService.adminDelete(deleteAdminUserPayload)
                     );
                 }
         );
     }
 
-    private void doIfAdmin(CustomUserDetails userDetails, Runnable runnable) {
+    private void doIfAdmin(@NonNull CustomUserDetails userDetails, Runnable runnable) {
+
         if (userDetails.getAuthorities().contains(ADMIN_AUTHORITY)) {
             runnable.run();
         }
