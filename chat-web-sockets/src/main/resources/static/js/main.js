@@ -870,11 +870,42 @@ var adminCreateUserEmailInput = document.querySelector('#admin-create-email');
 var adminCreateUserRolesInput = document.querySelector('#admin-create-roles');
 var adminCreateUserPasswordInput = document.querySelector('#admin-create-password');
 var adminCreateUserReplyPasswordInput = document.querySelector('#admin-create-reply-password');
+var confirmAdminCreateUserButton = document.querySelector('#confirm-admin-create-user');
+var backToAdminChooseButtonsFromCreateButton = document.querySelector('#back-to-admin-choose-buttons-from-create');
+
+confirmAdminCreateUserButton.onclick = (event) => {// todo: received created User
+    var username = adminCreateUserUsernameInput.value.trim();
+    var name = adminCreateUserNameInput.value.trim();
+    var email = adminCreateUserEmailInput.value.trim();
+    var roles = adminCreateUserRolesInput.value.trim().split(",").map(role => role.trim());
+    var password = adminCreateUserPasswordInput.value.trim();
+    var replyPassword = adminCreateUserReplyPasswordInput.value.trim();
+
+    if (username &&
+        name &&
+        email &&
+        roles.length > 0 &&
+        password === replyPassword
+    ) {
+        var payload = {
+            name: name,
+            email: email,
+            roleList: roles.toString(),
+            username: username,
+            password: password
+        }
+        stompClient.send('/app/admin/users:create', {}, JSON.stringify(payload));
+    }
+}
 
 adminCreateUserButton.onclick = (event) => {
     displayElement(adminCreateUserForm);
-    //todo : logic added accept button and back to panel
     hideAdminChooseButtons();
+}
+
+backToAdminChooseButtonsFromCreateButton.onclick = (event) => {
+    hideElement(adminCreateUserForm)
+    displayAdminChooseButton()
 }
 
 var adminUpdateUserUsernameInput = document.querySelector('#admin-update-username');
@@ -882,22 +913,67 @@ var adminUpdateUserNameInput = document.querySelector('#admin-update-name');
 var adminUpdateUserEmailInput = document.querySelector('#admin-update-email');
 var adminUpdateUserRolesInput = document.querySelector('#admin-update-roles');
 var adminUpdateSearchUserDataToUpdate = document.querySelector('#admin-update-search-user-data-to-update');
+var confirmAdminUpdateUserButton = document.querySelector('#confirm-admin-update-user');
+var backToAdminChooseButtonsFromUpdateButton = document.querySelector('#back-to-admin-choose-buttons-from-update');
 
 adminUpdateSearchUserDataToUpdate.onclick = () => {
-    //todo : logic search and write to input data or else display error
+    //todo: logic search and write to input data or else display error
 }
 
 adminUpdateUserButton.onclick = (event) => {
     displayElement(adminUpdateUserForm);
-    //todo : logic added accept button and back to panel
     hideAdminChooseButtons();
 }
 
+confirmAdminUpdateUserButton.onclick = (event) => { // todo: received updated User
+    var username = adminUpdateUserUsernameInput.value.trim();
+    var name = adminUpdateUserNameInput.value.trim();
+    var email = adminUpdateUserEmailInput.value.trim();
+    var roles = adminUpdateUserRolesInput.value.trim().split(",").map(role => role.trim());
+
+    if (username &&
+        name &&
+        email &&
+        roles.length > 0
+    ) {
+        var payload = {
+            name: name,
+            email: email,
+            roleList: roles.toString(),
+            username: username
+        }
+        stompClient.send('/app/admin/users:update', {}, JSON.stringify(payload));
+    }
+}
+
+backToAdminChooseButtonsFromUpdateButton.onclick = (event) => {
+    hideElement(adminUpdateUserForm)
+    displayAdminChooseButton()
+}
+
 var adminDeleteUserUsernameInput = document.querySelector('#admin-delete-username');
+var confirmAdminDeleteUserButton = document.querySelector('#confirm-admin-delete-user');
+var backToAdminChooseButtonsFromDeleteButton = document.querySelector('#back-to-admin-choose-buttons-from-delete');
+
 adminDeleteUserButton.onclick = (event) => {
     displayElement(adminDeleteUserForm);
-    //todo : logic added accept button and back to panel
     hideAdminChooseButtons();
+}
+
+confirmAdminDeleteUserButton.onclick = (event) => {
+    var username = adminDeleteUserUsernameInput.value.trim();
+
+    if (username) {
+        var payload = {
+            username: username
+        }
+        stompClient.send('/app/admin/users:delete', {}, JSON.stringify(payload));
+    }
+}
+
+backToAdminChooseButtonsFromDeleteButton.onclick = (event) => {
+    hideElement(adminDeleteUserForm)
+    displayAdminChooseButton()
 }
 
 function hideAdminChooseButtons() {
