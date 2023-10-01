@@ -3,9 +3,9 @@ package org.gnori.chatwebsockets.api.controller.user.user;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.gnori.chatwebsockets.api.controller.BaseWebSocketController;
-import org.gnori.chatwebsockets.api.controller.user.payload.UserPayload;
 import org.gnori.chatwebsockets.api.controller.user.user.payload.ChangePasswordUserPayload;
 import org.gnori.chatwebsockets.api.controller.user.user.payload.CreateUserPayload;
+import org.gnori.chatwebsockets.api.controller.user.user.payload.UpdateUserPayload;
 import org.gnori.chatwebsockets.api.dto.UserDto;
 import org.gnori.chatwebsockets.core.service.domain.UserService;
 import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
@@ -53,7 +53,7 @@ public class UserController extends BaseWebSocketController {
 
     @MessageMapping(USERS + UPDATE_PATH)
     public void update(
-            @Payload UserPayload payload,
+            @Payload UpdateUserPayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
         executeIfSessionAttrsIsPresent(headerAccessor,

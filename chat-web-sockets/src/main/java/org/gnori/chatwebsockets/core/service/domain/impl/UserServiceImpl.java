@@ -7,9 +7,9 @@ import org.gnori.chatwebsockets.api.controller.chatroom.payload.ChatRoomPayload;
 import org.gnori.chatwebsockets.api.controller.user.admin.payload.CreateAdminUserPayload;
 import org.gnori.chatwebsockets.api.controller.user.admin.payload.DeleteAdminUserPayload;
 import org.gnori.chatwebsockets.api.controller.user.admin.payload.UpdateAdminUserPayload;
-import org.gnori.chatwebsockets.api.controller.user.payload.UserPayload;
 import org.gnori.chatwebsockets.api.controller.user.user.payload.ChangePasswordUserPayload;
 import org.gnori.chatwebsockets.api.controller.user.user.payload.CreateUserPayload;
+import org.gnori.chatwebsockets.api.controller.user.user.payload.UpdateUserPayload;
 import org.gnori.chatwebsockets.api.converter.impl.UserConverter;
 import org.gnori.chatwebsockets.api.dto.UserDto;
 import org.gnori.chatwebsockets.core.domain.user.User;
@@ -58,7 +58,7 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
     }
 
     @Override
-    public UserDto update(UserPayload payload, CustomUserDetails user) {
+    public UserDto update(UpdateUserPayload payload, CustomUserDetails user) {
         final Long userId = user.getUserId();
         final User userEntity = repository.findById(userId)
                 .orElseThrow(NotFoundException::new);

@@ -7,5 +7,5 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PROTECTED)
-public class DeleteAdminUserPayload extends AdminUserPayload {
+public class GetAdminUserPayload extends AdminUserPayload{
 }
