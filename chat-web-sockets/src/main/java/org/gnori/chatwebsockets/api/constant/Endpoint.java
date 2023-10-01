@@ -35,12 +35,10 @@ public class Endpoint {
     public static final String TOPIC_USER_ERROR = TOPIC + "/%s/errors";
 
     public static final String TOPIC_USER_CHAT_ROOMS = TOPIC + "/%s" + CHAT_ROOMS;
-    public static final String TOPIC_USER_UPDATE_CHAT_ROOMS = TOPIC + "/%s/update" + CHAT_ROOMS;
 
     public static final String TOPIC_ADMIN_USER = TOPIC + "/admin/%s" + USERS;
     public static final String TOPIC_USER = TOPIC + "/%s" + USERS;
 
     public static final String TOPIC_CHAT_ROOM_MESSAGES = TOPIC + "/%s" + MESSAGES;
-    public static final String TOPIC_CHAT_ROOM_OLD_MESSAGES = TOPIC + "/%s" + OLD_MESSAGES;
-    public static final String TOPIC_CHAT_ROOM_UPDATE_MESSAGES = TOPIC + "/%s" + "/update" + MESSAGES;
+    public static final String TOPIC_CHAT_ROOM_OLD_MESSAGES = TOPIC + "/%s" + OLD_MESSAGES + "/%s";
 }

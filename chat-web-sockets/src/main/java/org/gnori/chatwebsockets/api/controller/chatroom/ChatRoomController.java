@@ -1,11 +1,13 @@
 package org.gnori.chatwebsockets.api.controller.chatroom;
 
 import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.gnori.chatwebsockets.api.controller.BaseWebSocketController;
 import org.gnori.chatwebsockets.api.controller.chatroom.payload.ChatRoomPayload;
 import org.gnori.chatwebsockets.api.controller.chatroom.payload.CreateChatRoomPayload;
 import org.gnori.chatwebsockets.api.controller.chatroom.payload.UpdateChatRoomPayload;
+import org.gnori.chatwebsockets.api.dto.ActionType;
 import org.gnori.chatwebsockets.api.dto.ChatRoomDto;
 import org.gnori.chatwebsockets.core.service.domain.ChatRoomService;
 import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
@@ -21,29 +23,20 @@ import static org.gnori.chatwebsockets.api.constant.Endpoint.*;
 import static org.gnori.chatwebsockets.core.service.security.util.SecurityUtil.convertFrom;
 
 @RestController
+@RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ChatRoomController extends BaseWebSocketController {
 
-   ChatRoomService<CustomUserDetails> chatRoomService;
-
-    public ChatRoomController(SimpMessagingTemplate simpMessagingTemplate, ChatRoomService<CustomUserDetails> chatRoomService) {
-        super(simpMessagingTemplate);
-        this.chatRoomService = chatRoomService;
-    }
+    ChatRoomService<CustomUserDetails> chatRoomService;
 
     @MessageMapping(CHAT_ROOMS + LIST_PATH)
-    public void getForUser(
+    public void getAll(
             SimpMessageHeaderAccessor headerAccessor
     ) {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
-                    final List<ChatRoomDto> chatRoomDtoAll = chatRoomService.getAll(user);
-
-                    simpMessagingTemplate.convertAndSend(
-                            String.format(TOPIC_USER_CHAT_ROOMS, user.getUsername()),
-                            chatRoomDtoAll
-                    );
+                    chatRoomService.getAll(user);
                 }
         );
     }
@@ -56,12 +49,7 @@ public class ChatRoomController extends BaseWebSocketController {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
-                    final ChatRoomDto chatRoomDto = chatRoomService.get(payload, user);
-
-                    simpMessagingTemplate.convertAndSend(
-                            String.format(TOPIC_USER_CHAT_ROOMS, user.getUsername()),
-                            chatRoomDto
-                    );
+                    chatRoomService.get(payload, user);
                 }
         );
     }
@@ -74,12 +62,7 @@ public class ChatRoomController extends BaseWebSocketController {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
-                    final ChatRoomDto createdChatRoomDto = chatRoomService.create(payload, user);
-
-                    simpMessagingTemplate.convertAndSend(
-                            String.format(TOPIC_USER_CHAT_ROOMS, user.getUsername()),
-                            createdChatRoomDto
-                    );
+                    chatRoomService.create(payload, user);
                 }
         );
     }
@@ -92,15 +75,7 @@ public class ChatRoomController extends BaseWebSocketController {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
-                    final ChatRoomDto chatRoomDto = chatRoomService.update(payload, user);
-
-                    chatRoomDto.getConnectedUsers().forEach(
-                            userDto ->
-                                    simpMessagingTemplate.convertAndSend(
-                                            String.format(TOPIC_USER_UPDATE_CHAT_ROOMS, userDto.getUsername()),
-                                            chatRoomDto
-                                    )
-                    );
+                    chatRoomService.update(payload, user);
                 }
         );
     }
@@ -113,16 +88,7 @@ public class ChatRoomController extends BaseWebSocketController {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
-                    final ChatRoomDto chatRoomDto = chatRoomService.delete(payload, user);
-                    final ChatRoomDto emptyChatRoomDto = new ChatRoomDto(chatRoomDto.getId());
-
-                    chatRoomDto.getConnectedUsers().forEach(
-                            userDto ->
-                                    simpMessagingTemplate.convertAndSend(
-                                            String.format(TOPIC_USER_UPDATE_CHAT_ROOMS, userDto.getUsername()),
-                                            emptyChatRoomDto
-                                    )
-                    );
+                    chatRoomService.delete(payload, user);
                 }
         );
     }

@@ -14,10 +14,8 @@ var currentUsername = null
 
 var oldMessageSubscription = null
 var messageSubscription = null
-var updateMessageSubscription = null
 
 var chatRoomsSubscription = null
-var chatRoomsUpdateSubscription = null
 
 var usersSubscription = null;
 var errorSubscription = null;
@@ -123,9 +121,6 @@ function logout() {
             if (chatRoomsSubscription) {
                 chatRoomsSubscription.unsubscribe();
             }
-            if (chatRoomsUpdateSubscription) {
-                chatRoomsUpdateSubscription.unsubscribe();
-            }
             if (errorSubscription) {
                 errorSubscription.unsubscribe();
             }
@@ -137,9 +132,6 @@ function logout() {
             }
             if (oldMessageSubscription) {
                 oldMessageSubscription.unsubscribe();
-            }
-            if (updateMessageSubscription) {
-                updateMessageSubscription.unsubscribe();
             }
             if (stompClient) {
                 stompClient.disconnect();
@@ -159,7 +151,7 @@ function connect() {
 
 function onConnected(options) {
     chatRoomsSubscription = stompClient.subscribe(('/topic/' + currentUsername + '/chat-rooms'), onChatRoomReceived);
-    chatRoomsUpdateSubscription = stompClient.subscribe(('/topic/' + currentUsername + '/update/chat-rooms'), onUpdateChatRoom);
+
     usersSubscription = stompClient.subscribe('/topic/' + currentUsername + '/users', onUserDataReceived);
     errorSubscription = stompClient.subscribe('/topic/' + currentUsername + '/errors', onBusinessError);
     stompClient.send('/app/users:get');
@@ -282,24 +274,22 @@ function createChat(event) {
 newChatForm.addEventListener('submit', createChat, true);
 
 function processOneChat(chat) {
-    if (chats.has(chat.id)) {
-        replaceChat(chat);
-    } else {
-        addChat(chat);
-    }
+    addChat(chat);
 }
 
 function onChatRoomReceived(payload) {
-    if (payload.body.startsWith('[')) {
-        JSON.parse(payload.body).forEach(chat => processOneChat(chat))
-    } else {
-        processOneChat(JSON.parse(payload.body));
-    }
-}
 
-function onUpdateChatRoom(payload) {
-    console.log("updating..." + JSON.parse(payload.body).id)
-    replaceChat(JSON.parse(payload.body));
+    var parsedPayload = JSON.parse(payload.body);
+
+    if (payload.body.startsWith('[')) {
+        parsedPayload.forEach(chat => processOneChat(chat))
+    } else if ("GET" === parsedPayload.actionType || "CREATE" === parsedPayload.actionType) {
+        processOneChat(parsedPayload);
+    } else if ("UPDATE" === parsedPayload.actionType) {
+        replaceChat(parsedPayload)
+    } else if ("DELETE" === parsedPayload.actionType) {
+        deleteChat(parsedPayload)
+    }
 }
 
 var chatPage = document.querySelector("#chat-page")
@@ -316,9 +306,6 @@ closeChatButton.onclick = (event) => {
     if (oldMessageSubscription) {
         oldMessageSubscription.unsubscribe();
     }
-    if (updateMessageSubscription) {
-        updateMessageSubscription.unsubscribe();
-    }
 }
 
 function onSelectChat(event) {
@@ -334,9 +321,6 @@ function onSelectChat(event) {
         if (messageSubscription !== null) {
             messageSubscription.unsubscribe();
         }
-        if (updateMessageSubscription != null) {
-            updateMessageSubscription.unsubscribe();
-        }
 
         console.log(currentChatId);
         var messageDto = {
@@ -348,70 +332,80 @@ function onSelectChat(event) {
         hideElement(chatListPage);
         displayElement(chatPage);
 
-        oldMessageSubscription = stompClient.subscribe(('/topic/' + currentChatId + '/old/messages'), onMessageReceived);
+        oldMessageSubscription = stompClient.subscribe(('/topic/' + currentChatId + '/old/messages/' + currentUsername), onMessageReceived);
         stompClient.send('/app/old/messages', {}, JSON.stringify(messageDto));
         messageSubscription = stompClient.subscribe(('/topic/' + currentChatId + '/messages'), onMessageReceived);
-        updateMessageSubscription = stompClient.subscribe(('/topic/' + currentChatId + '/update/messages'), onMessageForDeleteReceived);
     }
 }
 
 function onMessageReceived(payload) {
+
+    var parsedPayload = JSON.parse(payload.body);
+
     if (payload.body.startsWith('[')) {
-        JSON.parse(payload.body).forEach(message => processOneMessage(message))
-    } else {
-        processOneMessage(JSON.parse(payload.body));
+        parsedPayload.forEach(message => processOneMessage(message))
+    } else if ("GET" === parsedPayload.actionType || "CREATE" == parsedPayload.actionType) {
+        processOneMessage(parsedPayload);
+    } else if ("UPDATE" === parsedPayload.actionType) {
+        processUpdateMessage(parsedPayload);
+    } else if ("DELETE" === parsedPayload.actionType) {
+        processDeleteMessage(parsedPayload);
     }
+
+
 }
 
-function processOneMessage(message) {
+function processUpdateMessage(message) {
     var messagePk = MESSAGE_ID_EDIT_PREFIX + utf16ToUtf8(JSON.stringify(message.messagePrimaryKey));
     var existMessage = document.querySelector('li:has(#' + messagePk + ')>p');
     if (existMessage) {
         existMessage.textContent = message.text;
-    } else {
-        var messageElement = document.createElement('li');
-
-        messageElement.classList.add('chat-message');
-
-        var avatarElement = document.createElement('i');
-        var avatarText = document.createTextNode(message.fromUser[0]);
-        avatarElement.appendChild(avatarText);
-        avatarElement.style['background-color'] = getAvatarColor(message.fromUser);
-
-        messageElement.appendChild(avatarElement);
-
-        var usernameElement = document.createElement('span');
-        var usernameText = document.createTextNode(message.fromUser);
-        usernameElement.appendChild(usernameText);
-        messageElement.appendChild(usernameElement);
-
-
-        var textElement = document.createElement('p');
-        var messageText = document.createTextNode(message.text);
-        textElement.appendChild(messageText);
-
-        messageElement.appendChild(textElement);
-
-        var deleteMessageButton = document.createElement('button');
-        deleteMessageButton.textContent = '🗑️';
-        deleteMessageButton.id = MESSAGE_ID_DELETE_PREFIX + JSON.stringify(message.messagePrimaryKey);
-        deleteMessageButton.onclick = (event) => {
-            onClickDeleteMessage(event)
-        };
-        messageElement.appendChild(deleteMessageButton);
-
-        var editMessageButton = document.createElement('button');
-        editMessageButton.id = MESSAGE_ID_EDIT_PREFIX + JSON.stringify(message.messagePrimaryKey);
-        editMessageButton.textContent = '📝';
-        editMessageButton.onclick = (event) => {
-            onClickEditMessage(event)
-        };
-        messageElement.appendChild(editMessageButton);
-
-
-        messageArea.appendChild(messageElement);
-        messageArea.scrollTop = messageArea.scrollHeight;
     }
+}
+
+function processOneMessage(message) {
+    var messageElement = document.createElement('li');
+
+    messageElement.classList.add('chat-message');
+
+    var avatarElement = document.createElement('i');
+    var avatarText = document.createTextNode(message.fromUser[0]);
+    avatarElement.appendChild(avatarText);
+    avatarElement.style['background-color'] = getAvatarColor(message.fromUser);
+
+    messageElement.appendChild(avatarElement);
+
+    var usernameElement = document.createElement('span');
+    var usernameText = document.createTextNode(message.fromUser);
+    usernameElement.appendChild(usernameText);
+    messageElement.appendChild(usernameElement);
+
+
+    var textElement = document.createElement('p');
+    var messageText = document.createTextNode(message.text);
+    textElement.appendChild(messageText);
+
+    messageElement.appendChild(textElement);
+
+    var deleteMessageButton = document.createElement('button');
+    deleteMessageButton.textContent = '🗑️';
+    deleteMessageButton.id = MESSAGE_ID_DELETE_PREFIX + JSON.stringify(message.messagePrimaryKey);
+    deleteMessageButton.onclick = (event) => {
+        onClickDeleteMessage(event)
+    };
+    messageElement.appendChild(deleteMessageButton);
+
+    var editMessageButton = document.createElement('button');
+    editMessageButton.id = MESSAGE_ID_EDIT_PREFIX + JSON.stringify(message.messagePrimaryKey);
+    editMessageButton.textContent = '📝';
+    editMessageButton.onclick = (event) => {
+        onClickEditMessage(event)
+    };
+    messageElement.appendChild(editMessageButton);
+
+
+    messageArea.appendChild(messageElement);
+    messageArea.scrollTop = messageArea.scrollHeight;
 }
 
 // send message
@@ -437,8 +431,7 @@ function sendMessage(event) {
 
 messageForm.addEventListener('submit', sendMessage, true)
 
-function onMessageForDeleteReceived(payload) {
-    var messageDto = JSON.parse(payload.body);
+function processDeleteMessage(messageDto) {
     var messagePk = MESSAGE_ID_DELETE_PREFIX + utf16ToUtf8(JSON.stringify(messageDto.messagePrimaryKey));
     var deleteButton = document.querySelector('#' + messagePk);
     var li = deleteButton.parentElement;
@@ -493,26 +486,22 @@ function onClickConfirmEditMessage(event) {
 }
 
 function replaceChat(chatDto) {
+    chats.set(chatDto.id, chatDto);
     console.log(chatDto);
-    if (!chatDto.connectedUsers) {
-        deleteChat(chatDto.id)
-    } else {
-        chats.set(chatDto.id, chatDto);
-        console.log(chatDto);
 
-        var nameElement = document.querySelector('#' + CHAT_ID_NAME_PREFIX + chatDto.id);
-        nameElement.textContent = chatDto.name;
-        var avatarElement = document.querySelector('li:has(#' + CHAT_ID_NAME_PREFIX + chatDto.id + ')>i');
-        avatarElement.textContent = chatDto.name[0];
-        avatarElement.style['background-color'] = getAvatarColor(chatDto.name);
+    var nameElement = document.querySelector('#' + CHAT_ID_NAME_PREFIX + chatDto.id);
+    nameElement.textContent = chatDto.name;
+    var avatarElement = document.querySelector('li:has(#' + CHAT_ID_NAME_PREFIX + chatDto.id + ')>i');
+    avatarElement.textContent = chatDto.name[0];
+    avatarElement.style['background-color'] = getAvatarColor(chatDto.name);
 
-        if (!chatSettingsPage.classList.contains('hidden') && currentSettingsChatId === chatDto.id) {
-            displaySettingsChat();
-        }
+    if (!chatSettingsPage.classList.contains('hidden') && currentSettingsChatId === chatDto.id) {
+        displaySettingsChat();
     }
 }
 
-function deleteChat(id) {
+function deleteChat(chatDto) {
+    var id = chatDto.id
     chats.delete(id);
     if (currentChatId === id) {
         if (oldMessageSubscription) {
@@ -520,9 +509,6 @@ function deleteChat(id) {
         }
         if (messageSubscription) {
             messageSubscription.unsubscribe();
-        }
-        if (updateMessageSubscription) {
-            updateMessageSubscription.unsubscribe();
         }
     }
     var nameElement = document.querySelector('#' + CHAT_ID_NAME_PREFIX + id);
@@ -727,7 +713,6 @@ function onClickDeleteChat(event) {
         };
         stompClient.send('/app/chat-rooms/users:delete', {}, JSON.stringify(payloadUserOnDelete));
     }
-    deleteChat(currentChat.id);
     currentSettingsChatId = null;
 }
 
@@ -751,9 +736,6 @@ function onClickDeleteUserAccount(event) {
     if (chatRoomsSubscription) {
         chatRoomsSubscription.unsubscribe();
     }
-    if (chatRoomsUpdateSubscription) {
-        chatRoomsUpdateSubscription.unsubscribe();
-    }
     if (errorSubscription) {
         errorSubscription.unsubscribe();
     }
@@ -765,9 +747,6 @@ function onClickDeleteUserAccount(event) {
     }
     if (oldMessageSubscription) {
         oldMessageSubscription.unsubscribe();
-    }
-    if (updateMessageSubscription) {
-        updateMessageSubscription.unsubscribe();
     }
     if (stompClient) {
         stompClient.disconnect();
@@ -912,12 +891,19 @@ var adminUpdateUserUsernameInput = document.querySelector('#admin-update-usernam
 var adminUpdateUserNameInput = document.querySelector('#admin-update-name');
 var adminUpdateUserEmailInput = document.querySelector('#admin-update-email');
 var adminUpdateUserRolesInput = document.querySelector('#admin-update-roles');
-var adminUpdateSearchUserDataToUpdate = document.querySelector('#admin-update-search-user-data-to-update');
+var adminSearchUserDataToUpdate = document.querySelector('#admin-update-search-user-data-to-update');
 var confirmAdminUpdateUserButton = document.querySelector('#confirm-admin-update-user');
 var backToAdminChooseButtonsFromUpdateButton = document.querySelector('#back-to-admin-choose-buttons-from-update');
 
-adminUpdateSearchUserDataToUpdate.onclick = () => {
-    //todo: logic search and write to input data or else display error
+adminSearchUserDataToUpdate.onclick = (event) => {//todo: received search user
+    var username = adminUpdateUserUsernameInput.value.trim();
+
+    if (username) {
+        var payload = {
+            username: username
+        }
+        stompClient.send('/app/admin/users:get', {}, JSON.stringify(payload));
+    }
 }
 
 adminUpdateUserButton.onclick = (event) => {
@@ -1007,6 +993,7 @@ function getAvatarColor(messageSender) {
         hash = 31 * hash + messageSender.charCodeAt(i);
     }
     var index = Math.abs(hash % colors.length);
+
     return colors[index];
 }
 
