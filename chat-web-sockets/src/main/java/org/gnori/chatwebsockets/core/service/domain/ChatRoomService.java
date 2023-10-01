@@ -10,7 +10,7 @@ import org.gnori.chatwebsockets.core.exception.impl.NotFoundException;
 
 import java.util.List;
 
-public interface ChatRoomService<A> {
+public interface ChatRoomService<A> extends DomainService {
 
     List<ChatRoomDto> getAll(A user);
     ChatRoomDto get(ChatRoomPayload payload, A user) throws ForbiddenException, NotFoundException;

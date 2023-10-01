@@ -10,7 +10,7 @@ import org.gnori.chatwebsockets.api.dto.UserDto;
 import org.gnori.chatwebsockets.core.exception.impl.ConflictException;
 import org.gnori.chatwebsockets.core.exception.impl.NotFoundException;
 
-public interface UserService<A> {
+public interface UserService<A> extends DomainService {
 
     UserDto get(A user) throws NotFoundException;
     UserDto create(CreateUserPayload payload) throws ConflictException;
