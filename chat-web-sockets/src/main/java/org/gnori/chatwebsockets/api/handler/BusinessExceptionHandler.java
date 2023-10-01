@@ -25,15 +25,17 @@ public class BusinessExceptionHandler {
             SimpMessageHeaderAccessor headerAccessor,
             BusinessLogicException ex
     ) {
-        Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
-                sessionAttrs -> {
-                    final CustomUserDetails user = convertFrom(headerAccessor.getUser());
-                    simpMessagingTemplate.convertAndSend(
-                            String.format(TOPIC_USER_ERROR, user.getUsername()),
-                                new ExceptionDto(ex.getStatus().value(), ex.getMessage())
+
+        Optional.ofNullable(headerAccessor.getSessionAttributes())
+                .ifPresent(
+                        sessionAttrs -> {
+                            final CustomUserDetails user = convertFrom(headerAccessor.getUser());
+
+                            simpMessagingTemplate.convertAndSend(
+                                    String.format(TOPIC_USER_ERROR, user.getUsername()),
+                                    new ExceptionDto(ex.getStatus().value(), ex.getMessage())
                             );
-                });
-
-
+                        }
+                );
     }
 }

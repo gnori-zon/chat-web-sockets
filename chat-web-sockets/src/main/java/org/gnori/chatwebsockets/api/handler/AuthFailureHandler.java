@@ -21,8 +21,9 @@ public class AuthFailureHandler extends SimpleUrlAuthenticationFailureHandler {
             HttpServletResponse response,
             AuthenticationException exception
     ) throws IOException {
+
         response.setContentType(
-                ResposeHandlerUtils.contentTypeWithCharset(MediaType.TEXT_HTML, StandardCharsets.UTF_8)
+                ResponseHandlerUtils.contentTypeWithCharset(MediaType.TEXT_HTML, StandardCharsets.UTF_8)
         );
         response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication Failed. Wrong username or password or both");
     }
