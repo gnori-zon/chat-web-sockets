@@ -1,12 +1,12 @@
 package org.gnori.chatwebsockets.api.converter.impl;
 
-import org.gnori.chatwebsockets.api.converter.AbstractConverter;
+import org.gnori.chatwebsockets.api.converter.BaseDtoConverter;
 import org.gnori.chatwebsockets.api.dto.UserDto;
 import org.gnori.chatwebsockets.core.domain.user.User;
 import org.springframework.stereotype.Component;
 
 @Component
-public class UserConverter implements AbstractConverter<UserDto, User> {
+public class UserConverter implements BaseDtoConverter<UserDto, User> {
 
     @Override
     public User convertFrom(UserDto dto) {

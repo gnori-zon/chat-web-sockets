@@ -3,7 +3,7 @@ package org.gnori.chatwebsockets.api.converter.impl;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.gnori.chatwebsockets.api.converter.AbstractConverter;
+import org.gnori.chatwebsockets.api.converter.BaseDtoConverter;
 import org.gnori.chatwebsockets.api.dto.ChatRoomDto;
 import org.gnori.chatwebsockets.api.dto.UserDto;
 import org.gnori.chatwebsockets.core.domain.chat.ChatRoom;
@@ -16,7 +16,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class ChatRoomConverter implements AbstractConverter<ChatRoomDto, ChatRoom> {
+public class ChatRoomConverter implements BaseDtoConverter<ChatRoomDto, ChatRoom> {
 
     UserConverter userConverter;
 
