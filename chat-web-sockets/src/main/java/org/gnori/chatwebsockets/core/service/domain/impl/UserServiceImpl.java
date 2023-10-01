@@ -1,30 +1,36 @@
 package org.gnori.chatwebsockets.core.service.domain.impl;
 
 import lombok.AccessLevel;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.gnori.chatwebsockets.api.controller.chatroom.payload.ChatRoomPayload;
 import org.gnori.chatwebsockets.api.controller.user.admin.payload.CreateAdminUserPayload;
 import org.gnori.chatwebsockets.api.controller.user.admin.payload.DeleteAdminUserPayload;
+import org.gnori.chatwebsockets.api.controller.user.admin.payload.GetAdminUserPayload;
 import org.gnori.chatwebsockets.api.controller.user.admin.payload.UpdateAdminUserPayload;
 import org.gnori.chatwebsockets.api.controller.user.user.payload.ChangePasswordUserPayload;
 import org.gnori.chatwebsockets.api.controller.user.user.payload.CreateUserPayload;
 import org.gnori.chatwebsockets.api.controller.user.user.payload.UpdateUserPayload;
 import org.gnori.chatwebsockets.api.converter.impl.UserConverter;
+import org.gnori.chatwebsockets.api.dto.ActionType;
 import org.gnori.chatwebsockets.api.dto.UserDto;
 import org.gnori.chatwebsockets.core.domain.user.User;
 import org.gnori.chatwebsockets.core.domain.user.enums.Role;
 import org.gnori.chatwebsockets.core.exception.impl.ConflictException;
+import org.gnori.chatwebsockets.core.exception.impl.ForbiddenException;
 import org.gnori.chatwebsockets.core.exception.impl.NotFoundException;
 import org.gnori.chatwebsockets.core.repository.UserRepository;
 import org.gnori.chatwebsockets.core.service.domain.ChatRoomService;
 import org.gnori.chatwebsockets.core.service.domain.UserService;
 import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +38,7 @@ import java.util.List;
 public class UserServiceImpl implements UserService<CustomUserDetails> {
 
     private static final String EXIST_USERNAME_EX = "User with this username already exist";
+    private static final SimpleGrantedAuthority ADMIN_AUTHORITY = new SimpleGrantedAuthority(Role.ADMIN.name());
 
     ChatRoomService<CustomUserDetails> chatRoomService;
     BCryptPasswordEncoder bCryptPasswordEncoder;
@@ -40,21 +47,18 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
 
     @Override
     public UserDto get(CustomUserDetails user) {
-        final User existUser = repository.findByUsername(user.getUsername())
-                .orElseThrow(NotFoundException::new);
-
-        return converter.convertFrom(existUser);
+        return converter.convertWithActionType(getOrElseThrow(user.getUsername()), ActionType.GET);
     }
 
     @Override
     public UserDto create(CreateUserPayload payload) {
-        if (repository.existsByUsername(payload.getUsername())) throw new ConflictException(EXIST_USERNAME_EX);
+        if (repository.existsByUsername(payload.getUsername())) {
+            throw new ConflictException(EXIST_USERNAME_EX);
+        }
 
         final User userEntity = createFrom(payload);
 
-        return converter.convertFrom(
-                repository.save(userEntity)
-        );
+        return converter.convertWithActionType(repository.save(userEntity), ActionType.CREATE);
     }
 
     @Override
@@ -66,7 +70,7 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
         userEntity.setName(payload.getName());
         userEntity.setEmail(payload.getEmail());
 
-        return converter.convertFrom(repository.save(userEntity));
+        return converter.convertWithActionType(repository.save(userEntity), ActionType.UPDATE);
     }
 
     @Override
@@ -78,7 +82,7 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
 
         userEntity.setPassword(bCryptPasswordEncoder.encode(payload.getNewPassword()));
 
-        return converter.convertFrom(repository.save(userEntity));
+        return converter.convertWithActionType(repository.save(userEntity), ActionType.UPDATE);
     }
 
     @Override
@@ -89,37 +93,69 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
     }
 
     @Override
-    public UserDto adminCreate(CreateAdminUserPayload payload) {
+    public UserDto adminGet(GetAdminUserPayload payload, CustomUserDetails adminUser) {
 
-        if (repository.existsByUsername(payload.getUsername())) {
-            throw new ConflictException(EXIST_USERNAME_EX);
-        }
-        final User newUserEntity = createFrom(payload);
-
-        return converter.convertFrom(repository.save(newUserEntity));
+        return invokeIfAdmin(
+                adminUser,
+                () -> converter.convertWithActionType(getOrElseThrow(payload.getUsername()), ActionType.GET)
+        );
     }
 
     @Override
-    public UserDto adminUpdate(UpdateAdminUserPayload payload) {
+    public UserDto adminCreate(CreateAdminUserPayload payload, CustomUserDetails adminUser) {
 
-        final User oldUserEntity = repository.findByUsername(payload.getUsername())
-                .orElseThrow(NotFoundException::new);
+        return invokeIfAdmin(
+                adminUser,
+                () -> {
+                    if (repository.existsByUsername(payload.getUsername())) {
+                        throw new ConflictException(EXIST_USERNAME_EX);
+                    }
+                    final User newUserEntity = createFrom(payload);
 
-        oldUserEntity.setName(payload.getName());
-        oldUserEntity.setEmail(payload.getEmail());
-        oldUserEntity.setRoles(payload.getRoleList());
-
-        return converter.convertFrom(repository.save(oldUserEntity));
+                    return converter.convertWithActionType(repository.save(newUserEntity), ActionType.CREATE);
+                }
+        );
     }
 
     @Override
-    public void adminDelete(DeleteAdminUserPayload payload) {
+    public UserDto adminUpdate(UpdateAdminUserPayload payload, CustomUserDetails adminUser) {
 
-        final User user = repository.findByUsername(payload.getUsername())
+        return invokeIfAdmin(
+                adminUser,
+                () -> {
+                    final User oldUserEntity = repository.findByUsername(payload.getUsername())
+                            .orElseThrow(NotFoundException::new);
+
+                    oldUserEntity.setName(payload.getName());
+                    oldUserEntity.setEmail(payload.getEmail());
+                    oldUserEntity.setRoles(payload.getRoleList());
+
+                    return converter.convertWithActionType(repository.save(oldUserEntity), ActionType.UPDATE);
+                }
+        );
+    }
+
+    @Override
+    public UserDto adminDelete(DeleteAdminUserPayload payload, CustomUserDetails adminUser) {
+
+        return invokeIfAdmin(
+                adminUser,
+                () -> {
+                    final User user = repository.findByUsername(payload.getUsername())
+                            .orElseThrow(NotFoundException::new);
+
+                    deleteOwnedChatRoom(new CustomUserDetails(user));
+                    repository.delete(user);
+
+                    return converter.convertWithActionType(emptyUser(user.getId()), ActionType.DELETE);
+                }
+        );
+    }
+
+    private User getOrElseThrow(String username) {
+
+        return repository.findByUsername(username)
                 .orElseThrow(NotFoundException::new);
-
-        deleteOwnedChatRoom(new CustomUserDetails(user));
-        repository.delete(user);
     }
 
     private void deleteOwnedChatRoom(CustomUserDetails user) {
@@ -164,6 +200,23 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
                 new ArrayList<>(),
                 new ArrayList<>()
         );
+    }
+
+    private User emptyUser(Long id) {
+
+        final User emptyUser = new User(null, null, null, null, null, null);
+        emptyUser.setId(id);
+
+        return emptyUser;
+    }
+
+    private <T> T invokeIfAdmin(@NonNull CustomUserDetails userDetails, Supplier<T> supplier) {
+
+        if (userDetails.getAuthorities().contains(ADMIN_AUTHORITY)) {
+            return supplier.get();
+        } else {
+            throw new ForbiddenException();
+        }
     }
 
 }

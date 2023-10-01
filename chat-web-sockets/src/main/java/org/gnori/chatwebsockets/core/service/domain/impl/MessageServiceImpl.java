@@ -7,6 +7,7 @@ import org.gnori.chatwebsockets.api.controller.message.payload.CreateMessagePayl
 import org.gnori.chatwebsockets.api.controller.message.payload.MessagePayload;
 import org.gnori.chatwebsockets.api.controller.message.payload.UpdateMessagePayload;
 import org.gnori.chatwebsockets.api.converter.impl.MessageConverter;
+import org.gnori.chatwebsockets.api.dto.ActionType;
 import org.gnori.chatwebsockets.api.dto.MessageDto;
 import org.gnori.chatwebsockets.core.domain.chat.ChatRoom;
 import org.gnori.chatwebsockets.core.domain.message.Message;
@@ -41,7 +42,7 @@ public class MessageServiceImpl implements MessageService<CustomUserDetails> {
 
         if (chatIds.contains(chatRoomId)) {
 
-            return converter.convertAll(repository.findAllByChatId(chatRoomId));
+            return converter.convertWithActionType(repository.findAllByChatId(chatRoomId), ActionType.GET);
         }
         throw new ForbiddenException();
     }
@@ -54,26 +55,7 @@ public class MessageServiceImpl implements MessageService<CustomUserDetails> {
         if (chatIds.contains(chatRoomId)) {
             final MessagePrimaryKey primaryKey = new MessagePrimaryKey(payload.getFromUser(), payload.getChatRoomId(), payload.getDate());
 
-            return converter.convertFrom(
-                    getMessageOrElseThrow(primaryKey)
-            );
-        }
-        throw new ForbiddenException();
-    }
-
-    @Override
-    public MessageDto delete(MessagePayload payload, CustomUserDetails user) {
-        final String chatRoomId = payload.getChatRoomId();
-        final List<String> chatIds = getUserChatIds(user);
-
-        if (chatIds.contains(chatRoomId)) {
-            if (user.getUsername().equals(payload.getFromUser()) || isOwnerChatRoom(chatRoomId, user)) {
-                final MessagePrimaryKey primaryKey = new MessagePrimaryKey(payload.getFromUser(), payload.getChatRoomId(), payload.getDate());
-
-                repository.deleteByKey(primaryKey.getUsername(), primaryKey.getChatRoomId(), primaryKey.getDate());
-
-                return new MessageDto(primaryKey, null, null);
-            }
+            return converter.convertWithActionType(getMessageOrElseThrow(primaryKey), ActionType.GET);
         }
         throw new ForbiddenException();
     }
@@ -90,9 +72,7 @@ public class MessageServiceImpl implements MessageService<CustomUserDetails> {
                     payload.getText()
             );
 
-            return converter.convertFrom(
-                    repository.save(message)
-            );
+            return converter.convertWithActionType(repository.save(message), ActionType.CREATE);
         }
         throw new ForbiddenException();
     }
@@ -108,10 +88,28 @@ public class MessageServiceImpl implements MessageService<CustomUserDetails> {
             message.setFromUser(payload.getFromUser());
             message.setText(payload.getText());
 
-            return converter.convertFrom(repository.save(message));
+            return converter.convertWithActionType(repository.save(message), ActionType.UPDATE);
         }
         throw new ForbiddenException();
     }
+
+    @Override
+    public MessageDto delete(MessagePayload payload, CustomUserDetails user) {
+        final String chatRoomId = payload.getChatRoomId();
+        final List<String> chatIds = getUserChatIds(user);
+
+        if (chatIds.contains(chatRoomId)) {
+            if (user.getUsername().equals(payload.getFromUser()) || isOwnerChatRoom(chatRoomId, user)) {
+                final MessagePrimaryKey primaryKey = new MessagePrimaryKey(payload.getFromUser(), payload.getChatRoomId(), payload.getDate());
+
+                repository.deleteByKey(primaryKey.getUsername(), primaryKey.getChatRoomId(), primaryKey.getDate());
+
+                return converter.convertWithActionType(new Message(primaryKey, null, null), ActionType.DELETE);
+            }
+        }
+        throw new ForbiddenException();
+    }
+
 
     private boolean isOwnerChatRoom(String chatRoomId, CustomUserDetails user) {
         return user.getUsername().equals(
