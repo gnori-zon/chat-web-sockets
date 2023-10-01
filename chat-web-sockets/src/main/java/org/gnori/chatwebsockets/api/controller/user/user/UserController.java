@@ -87,7 +87,7 @@ public class UserController extends BaseWebSocketController {
         );
     }
 
-    @MessageMapping(USERS_SELF)
+    @MessageMapping(USERS + GET_PATH)
     public void get(
             SimpMessageHeaderAccessor headerAccessor
     ) {

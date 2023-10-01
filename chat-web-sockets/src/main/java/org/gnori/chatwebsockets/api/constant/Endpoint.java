@@ -10,6 +10,7 @@ public class Endpoint {
     public static final String LOGOUT_PATH = "/logout";
 
     public static final String ADD_PATH = ":add";
+    public static final String GET_PATH = ":get";
     public static final String CREATE_PATH = ":create";
     public static final String UPDATE_PATH = ":update";
     public static final String DELETE_PATH = ":delete";
@@ -21,7 +22,6 @@ public class Endpoint {
     public static final String SIGN_UP_PATH = ":sign-up";
 
     public static final String USERS = "/users";
-    public static final String USERS_SELF = USERS + "/self-data";
 
     public static final String OLD = "/old";
     public static final String CHAT_ROOMS = "/chat-rooms";

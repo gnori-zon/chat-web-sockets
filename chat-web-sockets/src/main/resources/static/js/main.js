@@ -162,7 +162,7 @@ function onConnected(options) {
     chatRoomsUpdateSubscription = stompClient.subscribe(('/topic/' + currentUsername + '/update/chat-rooms'), onUpdateChatRoom);
     usersSubscription = stompClient.subscribe('/topic/' + currentUsername + '/users', onUserDataReceived);
     errorSubscription = stompClient.subscribe('/topic/' + currentUsername + '/errors', onBusinessError);
-    stompClient.send('/app/users/self-data');
+    stompClient.send('/app/users:get');
     stompClient.send('/app/chat-rooms:list');
     displayElement(userSettingsPage);
     displayElement(newChatPage);
