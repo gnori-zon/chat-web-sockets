@@ -4,6 +4,9 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.gnori.chatwebsockets.api.controller.user.admin.payload.AdminUserPayload;
+import org.gnori.chatwebsockets.api.dto.ChatRoomDto;
+import org.gnori.chatwebsockets.api.dto.UserDto;
 import org.gnori.chatwebsockets.core.service.message.BaseAopMessenger;
 import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -125,10 +128,13 @@ public class AopUserMessenger extends BaseAopMessenger {
                 proceedingJoinPoint,
                 (args, returningValue) -> {
 
+                    final UserDto userDto = convertFrom(returningValue);
                     final String username = extractUserFrom(args, 1)
                             .getUsername();
 
-                    sendToAdminTopic(returningValue, username);
+
+                    sendToAdminTopic(userDto, username);
+                    sendToUserTopic(userDto, userDto.getUsername());
                 }
         );
     }
@@ -144,10 +150,12 @@ public class AopUserMessenger extends BaseAopMessenger {
                 proceedingJoinPoint,
                 (args, returningValue) -> {
 
+                    final UserDto userDto = convertFrom(returningValue);
                     final String username = extractUserFrom(args, 1)
                             .getUsername();
 
-                    sendToAdminTopic(returningValue, username);
+                    sendToAdminTopic(userDto, username);
+                    sendToUserTopic(userDto, userDto.getUsername());
                 }
         );
     }
@@ -158,6 +166,10 @@ public class AopUserMessenger extends BaseAopMessenger {
 
     private <T> void sendToUserTopic(T objectToSend, Object... argsToPattern) {
         send(objectToSend, TOPIC_USER, argsToPattern);
+    }
+
+    private UserDto convertFrom(Object object) {
+        return (UserDto) object;
     }
 
     private CustomUserDetails extractUserFrom(Object[] args, int numberPosition) {
