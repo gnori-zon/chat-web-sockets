@@ -26,9 +26,13 @@ public class AbstractEntity implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
 
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()){
+            return false;
+        }
         AbstractEntity that = (AbstractEntity) o;
 
         return getId() != null ? getId().equals(that.getId()) : that.getId() == null;

@@ -1,6 +1,9 @@
 package org.gnori.chatwebsockets.api.converter.impl;
 
-import org.gnori.chatwebsockets.api.converter.AbstractConverter;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.gnori.chatwebsockets.api.converter.BaseDtoConverter;
 import org.gnori.chatwebsockets.api.dto.ChatRoomDto;
 import org.gnori.chatwebsockets.api.dto.UserDto;
 import org.gnori.chatwebsockets.core.domain.chat.ChatRoom;
@@ -11,22 +14,34 @@ import java.util.Collections;
 import java.util.List;
 
 @Component
-public class ChatRoomConverter implements AbstractConverter<ChatRoomDto, ChatRoom> {
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+public class ChatRoomConverter implements BaseDtoConverter<ChatRoomDto, ChatRoom> {
+
+    UserConverter userConverter;
 
     @Override
     public ChatRoom convertFrom(ChatRoomDto dto) {
-        if (dto == null) return null;
+
+        if (dto == null) {
+            return null;
+        }
         final ChatRoom chatRoom = new ChatRoom();
 
         chatRoom.setName(dto.getName());
         chatRoom.setDescription(dto.getDescription());
         chatRoom.setOwnerUsername(dto.getOwnerUsername());
+
         return chatRoom;
     }
 
     @Override
     public ChatRoomDto convertFrom(ChatRoom entity) {
-        if (entity == null) return null;
+        
+        if (entity == null){
+            return null;
+        }
+        
         final ChatRoomDto chatRoomDto = new ChatRoomDto();
 
         chatRoomDto.setId(entity.getId());
@@ -39,9 +54,13 @@ public class ChatRoomConverter implements AbstractConverter<ChatRoomDto, ChatRoo
     }
 
     public List<UserDto> convertAllUserFrom(List<User> connectedUsers) {
-        if (connectedUsers == null) return Collections.emptyList();
+        
+        if (connectedUsers == null) {
+            return Collections.emptyList();
+        }
+        
         return connectedUsers.stream()
-                .map(user -> new UserDto(user.getId(), user.getUsername(), user.getName(), user.getEmail()))
+                .map(userConverter::convertFrom)
                 .toList();
     }
 }

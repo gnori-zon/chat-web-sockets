@@ -45,7 +45,7 @@ public class User extends AbstractEntity implements Serializable {
     @ElementCollection(fetch = FetchType.EAGER)
     @JoinColumn
     @OnDelete(action = OnDeleteAction.CASCADE)
-    List<Role> roles;
+    List<Role> roles = new ArrayList<>();
 
     @Column(name = "chat_ids")
     @Type(JsonType.class)

@@ -9,7 +9,7 @@ import org.gnori.chatwebsockets.core.domain.message.MessagePrimaryKey;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PROTECTED)
-public class MessageDto implements AbstractDto<MessagePrimaryKey> {
+public class MessageDto extends BaseDto<MessagePrimaryKey> {
 
     MessagePrimaryKey messagePrimaryKey;
     String fromUser;
@@ -17,11 +17,11 @@ public class MessageDto implements AbstractDto<MessagePrimaryKey> {
 
     @Override
     public MessagePrimaryKey getId() {
-        return null;
+        return messagePrimaryKey;
     }
 
     @Override
     public void setId(MessagePrimaryKey messagePrimaryKey) {
-
+        this.messagePrimaryKey = messagePrimaryKey;
     }
 }

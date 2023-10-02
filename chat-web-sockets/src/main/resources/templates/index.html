@@ -7,7 +7,8 @@
 </head>
 
 <body>
-
+<div id="error-message" class="hidden"></div>
+<div id="success-notification" class="hidden"></div>
 <div id="main-page">
     <h1 class="title">chat-web-sockets</h1>
     <h2 class="section-title">Choose and start chatting</h2>
@@ -84,6 +85,7 @@
 </div>
 
 <div id="chat-settings-page" class="hidden">
+    <button id="close-chat-edit-settings-page-button">❌</button>
     <h1 class="title">settings chat</h1>
     <div class="chat-settings-container">
         <div id="settings-chat-id"></div>
@@ -110,6 +112,7 @@
 
 
 <div id="chat-edit-settings-page" class="hidden">
+    <button id="back-to-chat-settings-page-button">←</button>
     <h1 class="title">edit chat</h1>
     <div class="edit-chat-page-container">
         <form id="editChatForm" name="editChatForm">
@@ -149,6 +152,7 @@
 
 
 <div id="chat-page" class="hidden">
+    <button id="close-chat-page-button">❌</button>
     <div class="chat-container">
         <div class="chat-header">
             <h2 id="chat-name">chat</h2>
@@ -178,6 +182,9 @@
 
         <button id="edit-user-button" type="button" class="primary">edit</button>
         <button id="delete-user-button" type="button" class="primary">delete</button>
+    </div>
+    <div class="logout-container">
+        <button id="logout-button" type="button" class="primary">logout</button>
     </div>
 </div>
 
@@ -213,6 +220,70 @@
                 <button type="submit" class="primary">change password</button>
             </div>
         </form>
+
+    </div>
+</div>
+<div id="admin-panel" class=" hidden">
+    <div class="admin-panel-container">
+        <button id="admin-create-user-button" class="primary">create user</button>
+        <div id="admin-create-user-form" class="form-group hidden">
+            <div>
+                <input type="text" id="admin-create-username" placeholder="username..." autocomplete="off"
+                       class="form-control"/>
+            </div>
+            <div>
+                <input type="text" id="admin-create-name" placeholder="name..." autocomplete="off"
+                       class="form-control"/>
+            </div>
+            <div>
+                <input type="email" id="admin-create-email" placeholder="email..." autocomplete="off"
+                       class="form-control"/>
+            </div>
+            <div>
+                <input type="text" id="admin-create-roles" placeholder="roles..." autocomplete="off"
+                       class="form-control"/>
+            </div>
+            <div>
+                <input type="password" id="admin-create-password" placeholder="password..." autocomplete="off"
+                       class="form-control"/>
+            </div>
+            <div>
+                <input type="password" id="admin-create-reply-password" placeholder="reply password..."
+                       autocomplete="off" class="form-control"/>
+            </div>
+            <button id="confirm-admin-create-user">✔</button>
+            <button id="back-to-admin-choose-buttons-from-create">←</button>
+        </div>
+
+        <button id="admin-update-user-button" class="primary">edit user</button>
+        <div id="admin-update-user-form" class="form-group hidden">
+            <div>
+                <input type="text" id="admin-update-username" placeholder="username..." class="form-control"/>
+                <button id="admin-update-search-user-data-to-update" type="submit">👤🔍</button>
+            </div>
+            <div>
+                <input type="text" id="admin-update-name" placeholder="name..." autocomplete="off"
+                       class="form-control"/>
+            </div>
+            <div>
+                <input type="email" id="admin-update-email" placeholder="email..." autocomplete="off"
+                       class="form-control"/>
+            </div>
+            <div>
+                <input type="text" id="admin-update-roles" placeholder="roles..." autocomplete="off"
+                       class="form-control"/>
+            </div>
+            <button id="confirm-admin-update-user">✔</button>
+            <button id="back-to-admin-choose-buttons-from-update">←</button>
+        </div>
+
+        <button id="admin-delete-user-button" class="primary">delete user</button>
+        <div id="admin-delete-user-form" class="form-group hidden">
+            <input type="text" id="admin-delete-username" placeholder="username..." autocomplete="off"
+                   class="form-control"/>
+            <button id="confirm-admin-delete-user">✔</button>
+            <button id="back-to-admin-choose-buttons-from-delete">←</button>
+        </div>
     </div>
 </div>
 

@@ -14,11 +14,14 @@ var currentUsername = null
 
 var oldMessageSubscription = null
 var messageSubscription = null
-var updateMessageSubscription = null
 
 var chatRoomsSubscription = null
 
 var usersSubscription = null;
+var errorSubscription = null;
+
+var adminSubscription = null
+
 // choose sign-in or sign-up
 var choosePage = document.querySelector("#main-page")
 var loginPage = document.querySelector("#login-page")
@@ -28,14 +31,16 @@ var chooseLoginForm = document.querySelector('#chooseLoginForm');
 var chooseRegistrationForm = document.querySelector('#chooseRegistrationForm');
 
 function chooseLogin(event) {
-    choosePage.classList.add('hidden');
-    loginPage.classList.remove('hidden');
+    hideElement(choosePage);
+    displayElement(loginPage);
+
     event.preventDefault();
 }
 
 function chooseRegistration(event) {
-    choosePage.classList.add('hidden');
-    registrationPage.classList.remove('hidden');
+    hideElement(choosePage);
+    displayElement(registrationPage);
+
     event.preventDefault();
 }
 
@@ -60,12 +65,54 @@ function authRequest(username, password) {
         .then(response => {
             console.log(response.status)
             if (response.redirected) {
-                chatListPage.classList.remove('hidden');
+                displayElement(chatListPage);
                 currentUsername = username
                 connect();
+            } else if (response.status === 401) {
+                displayError("Bad authorize credentials");
+                displayElement(choosePage);
             }
         })
         .catch(err => console.log(err))
+}
+
+function clearPage() {
+    hideElement(chatListPage);
+    hideElement(newChatPage);
+    hideElement(chatPage);
+    hideElement(chatSettingsPage);
+    hideElement(userSettingsPage);
+    hideElement(editUserPage);
+    hideElement(chatEditSettingsPage);
+    hideElement(registrationPage);
+    hideElement(loginPage);
+
+    displayElement(choosePage);
+    currentUsername = ''
+
+    userSettingsName.textContent = '';
+    userSettingsUsername.textContent = '';
+    userSettingsEmail.textContent = '';
+
+    chatSettingsId.textContent = '';
+    chatSettingsName.textContent = '';
+    chatSettingsDescription.textContent = '';
+    chatSettingsOwner.textContent = '';
+    chatSettingsConnectedUsers.innerHTML = null;
+
+    editChatName.value = '';
+    editChatDescription.value = '';
+    editUserName.value = '';
+    editUserEmail.value = '';
+
+    chats = new Map()
+    chatArea.innerHTML = null;
+    messageArea.innerHTML = null;
+    currentChatId = null;
+    currentChat = null;
+    currentUser = null;
+    currentUsername = null;
+    currentSettingsChatId = null;
 }
 
 function logout() {
@@ -74,46 +121,31 @@ function logout() {
     })
         .then(response => {
             console.log(response.status)
-
-            if (response.redirected) {
-                chatListPage.classList.add('hidden');
-                currentUsername = ''
+            if (chatRoomsSubscription) {
+                chatRoomsSubscription.unsubscribe();
             }
-            userSettingsName.textContent = '';
-            userSettingsUsername.textContent = '';
-            userSettingsEmail.textContent = '';
-
-            chatSettingsId.textContent = '';
-            chatSettingsName.textContent ='';
-            chatSettingsDescription.textContent = '';
-            chatSettingsOwner.textContent = '';
-            chatSettingsConnectedUsers.innerHTML = null;
-
-            editChatName.value = '';
-            editChatDescription.value = '';
-            editUserName.value = '';
-            editUserEmail.value = '';
-
-            chats = new Map()
-            chatArea.innerHTML = null;
-            messageArea.innerHTML = null;
-            currentChatId = null;
-            currentChat = null;
-            currentUser = null;
-            currentUsername = null;
-            currentSettingsChatId = null;
+            if (errorSubscription) {
+                errorSubscription.unsubscribe();
+            }
+            if (adminSubscription) {
+                adminSubscription.unsubscribe();
+            }
+            if (messageSubscription) {
+                messageSubscription.unsubscribe();
+            }
+            if (usersSubscription) {
+                usersSubscription.unsubscribe();
+            }
+            if (oldMessageSubscription) {
+                oldMessageSubscription.unsubscribe();
+            }
+            if (stompClient) {
+                stompClient.disconnect();
+                stompClient = null;
+            }
+            clearPage()
         })
         .catch(err => console.log(err))
-    fetch(MAIN_HOST, {
-        method: 'GET'
-    }).then(response => {
-            console.log(response.status)
-
-            if (response.redirected) {
-                chatListPage.classList.add('hidden');
-                currentUsername = ''
-            }
-        })
 }
 
 function connect() {
@@ -124,17 +156,37 @@ function connect() {
 }
 
 function onConnected(options) {
-    chatRoomsSubscription = stompClient.subscribe(('/topic/' + currentUsername + '/chat-rooms'), onChatRoomReceived);
+
+    chatRoomsSubscription = stompClient.subscribe('/topic/' + currentUsername + '/chat-rooms', onChatRoomReceived);
     usersSubscription = stompClient.subscribe('/topic/' + currentUsername + '/users', onUserDataReceived);
-    stompClient.send('/app/users/self-data');
+    errorSubscription = stompClient.subscribe('/topic/' + currentUsername + '/errors', onBusinessError);
+
+    stompClient.send('/app/users:get');
     stompClient.send('/app/chat-rooms:list');
-    userSettingsPage.classList.remove('hidden')
+    displayElement(userSettingsPage);
+    displayElement(newChatPage);
 
 }
 
+var errorElement = document.querySelector('#error-message')
+
+function displayError(errorMessage) {
+    errorElement.textContent = errorMessage;
+    errorElement.style.color = 'red';
+
+    displayElement(errorElement);
+    setTimeout(
+        () => hideElement(errorElement),
+        5500
+    );
+}
+
 function onError(error) {
-    connectingElement.textContent = 'Could not connect to WebSocket server. Please refresh this page to try again!';
-    connectingElement.style.color = 'red' + error.toString();
+    displayError(error.toString())
+}
+
+function onBusinessError(payload) {
+    displayError(JSON.parse(payload.body).message);
 }
 
 //sign-in
@@ -150,7 +202,7 @@ function login(event) {
         authRequest(username, password)
         document.querySelector('#username-log').value = '';
         document.querySelector('#password-log').value = '';
-        loginPage.classList.add('hidden');
+        hideElement(loginPage);
         event.preventDefault();
     }
 }
@@ -191,7 +243,7 @@ function registrate(event) {
             document.querySelector('#password-reg-2').value = '';
             document.querySelector('#email-reg').value = '';
             document.querySelector('#name-reg').value = '';
-            registrationPage.classList.add('hidden');
+            hideElement(registrationPage);
             console.log(response.status)
         })
             .catch(err => console.log(err))
@@ -206,6 +258,7 @@ registrationForm.addEventListener('submit', registrate, true)
 var chats = new Map()
 var chatArea = document.querySelector('#chatsArea');
 
+var newChatPage = document.querySelector('#new-chat-page');
 var newChatForm = document.querySelector('#newChatForm');
 var chatNameInput = document.querySelector('#newChatName');
 var chatDescriptionInput = document.querySelector('#newChatDescription');
@@ -227,16 +280,40 @@ function createChat(event) {
 
 newChatForm.addEventListener('submit', createChat, true);
 
+function processOneChat(chat) {
+    addChat(chat);
+}
+
 function onChatRoomReceived(payload) {
+
+    var parsedPayload = JSON.parse(payload.body);
+
     if (payload.body.startsWith('[')) {
-        JSON.parse(payload.body).forEach(chat => processOneChat(chat))
-    } else {
-        processOneChat(JSON.parse(payload.body));
+        parsedPayload.forEach(chat => processOneChat(chat))
+    } else if ("GET" === parsedPayload.actionType || "CREATE" === parsedPayload.actionType) {
+        processOneChat(parsedPayload);
+    } else if ("UPDATE" === parsedPayload.actionType) {
+        replaceChat(parsedPayload)
+    } else if ("DELETE" === parsedPayload.actionType) {
+        deleteChat(parsedPayload)
     }
 }
 
 var chatPage = document.querySelector("#chat-page")
+var closeChatButton = document.querySelector("#close-chat-page-button")
 var currentChatId = null
+
+closeChatButton.onclick = (event) => {
+    hideElement(chatPage);
+    displayElement(newChatPage);
+    displayElement(chatListPage);
+    if (messageSubscription) {
+        messageSubscription.unsubscribe();
+    }
+    if (oldMessageSubscription) {
+        oldMessageSubscription.unsubscribe();
+    }
+}
 
 function onSelectChat(event) {
 
@@ -251,9 +328,6 @@ function onSelectChat(event) {
         if (messageSubscription !== null) {
             messageSubscription.unsubscribe();
         }
-        if (updateMessageSubscription != null) {
-            updateMessageSubscription.unsubscribe();
-        }
 
         console.log(currentChatId);
         var messageDto = {
@@ -261,73 +335,84 @@ function onSelectChat(event) {
             date: null,
             fromUser: null
         }
-        chatListPage.classList.add('hidden');
-        chatPage.classList.remove('hidden');
+        hideElement(newChatPage);
+        hideElement(chatListPage);
+        displayElement(chatPage);
 
-        oldMessageSubscription = stompClient.subscribe(('/topic/' + currentChatId + '/old/messages'), onMessageReceived);
+        oldMessageSubscription = stompClient.subscribe(('/topic/' + currentChatId + '/old/messages/' + currentUsername), onMessageReceived);
         stompClient.send('/app/old/messages', {}, JSON.stringify(messageDto));
         messageSubscription = stompClient.subscribe(('/topic/' + currentChatId + '/messages'), onMessageReceived);
-        updateMessageSubscription = stompClient.subscribe(('/topic/' + currentChatId + '/update/messages'), onMessageForDeleteReceived);
     }
 }
 
 function onMessageReceived(payload) {
+
+    var parsedPayload = JSON.parse(payload.body);
+
     if (payload.body.startsWith('[')) {
-        JSON.parse(payload.body).forEach(message => processOneMessage(message))
-    } else {
-        processOneMessage(JSON.parse(payload.body));
+        parsedPayload.forEach(message => processOneMessage(message))
+    } else if ("GET" === parsedPayload.actionType || "CREATE" == parsedPayload.actionType) {
+        processOneMessage(parsedPayload);
+    } else if ("UPDATE" === parsedPayload.actionType) {
+        processUpdateMessage(parsedPayload);
+    } else if ("DELETE" === parsedPayload.actionType) {
+        processDeleteMessage(parsedPayload);
     }
+
+
 }
 
-function processOneMessage(message) {
+function processUpdateMessage(message) {
     var messagePk = MESSAGE_ID_EDIT_PREFIX + utf16ToUtf8(JSON.stringify(message.messagePrimaryKey));
     var existMessage = document.querySelector('li:has(#' + messagePk + ')>p');
     if (existMessage) {
         existMessage.textContent = message.text;
-    } else {
-        var messageElement = document.createElement('li');
-
-        messageElement.classList.add('chat-message');
-
-        var avatarElement = document.createElement('i');
-        var avatarText = document.createTextNode(message.fromUser[0]);
-        avatarElement.appendChild(avatarText);
-        avatarElement.style['background-color'] = getAvatarColor(message.fromUser);
-
-        messageElement.appendChild(avatarElement);
-
-        var usernameElement = document.createElement('span');
-        var usernameText = document.createTextNode(message.fromUser);
-        usernameElement.appendChild(usernameText);
-        messageElement.appendChild(usernameElement);
-
-
-        var textElement = document.createElement('p');
-        var messageText = document.createTextNode(message.text);
-        textElement.appendChild(messageText);
-
-        messageElement.appendChild(textElement);
-
-        var deleteMessageButton = document.createElement('button');
-        deleteMessageButton.textContent = '🗑️';
-        deleteMessageButton.id = MESSAGE_ID_DELETE_PREFIX + JSON.stringify(message.messagePrimaryKey);
-        deleteMessageButton.onclick = (event) => {
-            onClickDeleteMessage(event)
-        };
-        messageElement.appendChild(deleteMessageButton);
-
-        var editMessageButton = document.createElement('button');
-        editMessageButton.id = MESSAGE_ID_EDIT_PREFIX + JSON.stringify(message.messagePrimaryKey);
-        editMessageButton.textContent = '📝';
-        editMessageButton.onclick = (event) => {
-            onClickEditMessage(event)
-        };
-        messageElement.appendChild(editMessageButton);
-
-
-        messageArea.appendChild(messageElement);
-        messageArea.scrollTop = messageArea.scrollHeight;
     }
+}
+
+function processOneMessage(message) {
+    var messageElement = document.createElement('li');
+
+    messageElement.classList.add('chat-message');
+
+    var avatarElement = document.createElement('i');
+    var avatarText = document.createTextNode(message.fromUser[0]);
+    avatarElement.appendChild(avatarText);
+    avatarElement.style['background-color'] = getAvatarColor(message.fromUser);
+
+    messageElement.appendChild(avatarElement);
+
+    var usernameElement = document.createElement('span');
+    var usernameText = document.createTextNode(message.fromUser);
+    usernameElement.appendChild(usernameText);
+    messageElement.appendChild(usernameElement);
+
+
+    var textElement = document.createElement('p');
+    var messageText = document.createTextNode(message.text);
+    textElement.appendChild(messageText);
+
+    messageElement.appendChild(textElement);
+
+    var deleteMessageButton = document.createElement('button');
+    deleteMessageButton.textContent = '🗑️';
+    deleteMessageButton.id = MESSAGE_ID_DELETE_PREFIX + JSON.stringify(message.messagePrimaryKey);
+    deleteMessageButton.onclick = (event) => {
+        onClickDeleteMessage(event)
+    };
+    messageElement.appendChild(deleteMessageButton);
+
+    var editMessageButton = document.createElement('button');
+    editMessageButton.id = MESSAGE_ID_EDIT_PREFIX + JSON.stringify(message.messagePrimaryKey);
+    editMessageButton.textContent = '📝';
+    editMessageButton.onclick = (event) => {
+        onClickEditMessage(event)
+    };
+    messageElement.appendChild(editMessageButton);
+
+
+    messageArea.appendChild(messageElement);
+    messageArea.scrollTop = messageArea.scrollHeight;
 }
 
 // send message
@@ -353,8 +438,7 @@ function sendMessage(event) {
 
 messageForm.addEventListener('submit', sendMessage, true)
 
-function onMessageForDeleteReceived(payload) {
-    var messageDto = JSON.parse(payload.body);
+function processDeleteMessage(messageDto) {
     var messagePk = MESSAGE_ID_DELETE_PREFIX + utf16ToUtf8(JSON.stringify(messageDto.messagePrimaryKey));
     var deleteButton = document.querySelector('#' + messagePk);
     var li = deleteButton.parentElement;
@@ -383,7 +467,7 @@ var oldSelectedMessageText = null
 function onClickEditMessage(event) {
     selectedMessageId = JSON.parse(event.target.id.slice(MESSAGE_ID_EDIT_PREFIX.length));
     oldSelectedMessageText = messageInput.value.trim();
-    confirmEditMessageButton.classList.remove('hidden')
+    displayElement(confirmEditMessageButton);
     var existMessage = document.querySelector('li:has(#' + utf16ToUtf8(event.target.id) + ')>p');
     if (existMessage) {
         messageInput.value = existMessage.textContent
@@ -404,15 +488,7 @@ function onClickConfirmEditMessage(event) {
         }
         messageInput.value = '';
         selectedMessageId = null;
-        confirmEditMessageButton.classList.add('hidden')
-    }
-}
-
-function processOneChat(chatDto) {
-    if (chats.has(chatDto.id)) {
-        replaceChat(chatDto);
-    } else {
-        addChat(chatDto);
+        hideElement(confirmEditMessageButton);
     }
 }
 
@@ -431,8 +507,17 @@ function replaceChat(chatDto) {
     }
 }
 
-function deleteChat(id) {
+function deleteChat(chatDto) {
+    var id = chatDto.id
     chats.delete(id);
+    if (currentChatId === id) {
+        if (oldMessageSubscription) {
+            oldMessageSubscription.unsubscribe();
+        }
+        if (messageSubscription) {
+            messageSubscription.unsubscribe();
+        }
+    }
     var nameElement = document.querySelector('#' + CHAT_ID_NAME_PREFIX + id);
     var chat = nameElement.parentElement
     chat.parentElement.removeChild(chat)
@@ -487,6 +572,8 @@ var chatSettingsDescription = document.querySelector("#settings-chat-description
 var chatSettingsOwner = document.querySelector("#settings-chat-owner")
 var chatSettingsConnectedUsers = document.querySelector("#settings-chat-connectedUser")
 var editChatSettingsButton = document.querySelector("#edit-chat-button")
+var backToSettingChatPage = document.querySelector("#back-to-chat-settings-page-button")
+var closeChatSettingsPageButton = document.querySelector("#close-chat-edit-settings-page-button")
 var deleteChatButton = document.querySelector("#delete-chat-button")
 var addUserInChatForm = document.querySelector('#addUserInChatForm')
 var usernameAddingUserInput = document.querySelector('#usernameAddingUser')
@@ -494,14 +581,25 @@ var usernameAddingUserInput = document.querySelector('#usernameAddingUser')
 addUserInChatForm.addEventListener('submit', onClickAddUserInChat, true)
 var currentChat = null
 
+closeChatSettingsPageButton.onclick = (event) => {
+    hideElement(chatSettingsPage);
+    displayElement(newChatPage);
+}
+
+backToSettingChatPage.onclick = () => {
+    displayElement(chatSettingsPage);
+    hideElement(chatEditSettingsPage);
+}
+
 function onSelectSettingChat(event) {
+    hideElement(newChatPage);
     currentSettingsChatId = event.target.id.slice(CHAT_ID_SETTINGS_PREFIX.length);
     console.log(currentSettingsChatId);
     displaySettingsChat();
 }
 
 function displaySettingsChat() {
-    chatSettingsPage.classList.remove('hidden');
+    displayElement(chatSettingsPage);
     if (chats.has(currentSettingsChatId)) {
         currentChat = chats.get(currentSettingsChatId);
 
@@ -520,9 +618,9 @@ function displaySettingsChat() {
                 currentChat.connectedUsers.forEach(user => writeUserToSettings(user))
             }
             if (currentUsername === currentChat.ownerUsername) {
-                editChatSettingsButton.classList.remove('hidden');
+                displayElement(editChatSettingsButton);
             } else {
-                editChatSettingsButton.classList.add('hidden');
+                hideElement(editChatSettingsButton);
             }
         }
     }
@@ -581,8 +679,8 @@ var editChatName = document.querySelector("#editChatName")
 var editChatDescription = document.querySelector("#editChatDescription")
 
 function onClickEditChatSettings(event) {
-    chatSettingsPage.classList.add('hidden');
-    chatEditSettingsPage.classList.remove('hidden');
+    hideElement(chatSettingsPage);
+    displayElement(chatEditSettingsPage);
     editChatName.setAttribute("value", currentChat.name);
     editChatDescription.setAttribute("value", currentChat.description);
 }
@@ -599,7 +697,7 @@ function updateChat(event) {
             description: chatDescription
         };
         stompClient.send("/app/chat-rooms:update", {}, JSON.stringify(chatRoomDto));
-        chatEditSettingsPage.classList.add('hidden');
+        hideElement(chatEditSettingsPage);
         editChatName.value = ''
         editChatDescription.value = ''
         currentSettingsChatId = null
@@ -608,12 +706,20 @@ function updateChat(event) {
 }
 
 function onClickDeleteChat(event) {
-    chatSettingsPage.classList.add('hidden');
-    deleteChat(currentChat.id)
-    var chatRoomDto = {
-        chatRoomId: currentSettingsChatId
-    };
-    stompClient.send("/app/chat-rooms:delete", {}, JSON.stringify(chatRoomDto));
+    hideElement(chatSettingsPage);
+
+    if (currentChat.owner === currentUsername) {
+        var payloadChatOnDelete = {
+            chatRoomId: currentSettingsChatId
+        };
+        stompClient.send("/app/chat-rooms:delete", {}, JSON.stringify(payloadChatOnDelete));
+    } else {
+        var payloadUserOnDelete = {
+            username: currentUsername,
+            chatRoomId: currentSettingsChatId
+        };
+        stompClient.send('/app/chat-rooms/users:delete', {}, JSON.stringify(payloadUserOnDelete));
+    }
     currentSettingsChatId = null;
 }
 
@@ -633,8 +739,15 @@ deleteUserAccountButton.onclick = (event) => {
 
 function onClickDeleteUserAccount(event) {
     stompClient.send("/app/users:delete", {}, {});
+
     if (chatRoomsSubscription) {
         chatRoomsSubscription.unsubscribe();
+    }
+    if (errorSubscription) {
+        errorSubscription.unsubscribe();
+    }
+    if (adminSubscription) {
+        adminSubscription.unsubscribe();
     }
     if (messageSubscription) {
         messageSubscription.unsubscribe();
@@ -645,15 +758,11 @@ function onClickDeleteUserAccount(event) {
     if (oldMessageSubscription) {
         oldMessageSubscription.unsubscribe();
     }
-    if (updateMessageSubscription) {
-        updateMessageSubscription.unsubscribe();
-    }
     if (stompClient) {
         stompClient.disconnect();
         stompClient = null;
     }
-    logout();
-
+    clearPage();
 }
 
 var editUserPage = document.querySelector("#user-edit-page");
@@ -668,7 +777,7 @@ var userNewPassword1 = document.querySelector("#change-new-password1");
 var userNewPassword2 = document.querySelector("#change-new-password2");
 
 function onClickEditUserAccount(event) {
-    editUserPage.classList.remove('hidden');
+    displayElement(editUserPage);
     stompClient.send()
     editUserName.value = currentUser.name;
     editUserEmail.value = currentUser.email;
@@ -689,7 +798,7 @@ function onClickConfirmEditUser(event) {
         stompClient.send('/app/users:update', {}, JSON.stringify(payload));
         editUserName.value = '';
         editUserEmail.value = '';
-        editUserPage.classList.add('hidden');
+        hideElement(editUserPage);
     }
     event.preventDefault();
 }
@@ -708,19 +817,240 @@ function onClickConfirmChangePassword(event) {
         userOldPassword.value = '';
         userNewPassword1.value = '';
         userNewPassword2.value = '';
-        editUserPage.classList.add('hidden');
+        hideElement(editUserPage);
     }
     event.preventDefault();
 }
 
 var currentUser = null;
 
+var logoutButton = document.querySelector('#logout-button')
+
+logoutButton.onclick = (event) => {
+    logout();
+}
+
 function onUserDataReceived(payload) {
     currentUser = JSON.parse(payload.body);
 
-    userSettingsUsername.textContent = 'username: ' + currentUser.username;
-    userSettingsName.textContent = 'name: ' + currentUser.name;
-    userSettingsEmail.textContent = 'email: ' + currentUser.email;
+    console.log(currentUser)
+    if ("GET" === currentUser.actionType ||
+        "UPDATE" === currentUser.actionType) {
+
+        userSettingsUsername.textContent = 'username: ' + currentUser.username;
+        userSettingsName.textContent = 'name: ' + currentUser.name;
+        userSettingsEmail.textContent = 'email: ' + currentUser.email;
+
+        console.log("UDPATED")
+
+        if (currentUser.roles.includes('ADMIN')) {
+            displayElement(adminPanel)
+            if (adminSubscription) {
+                adminSubscription.unsubscribe();
+            }
+            adminSubscription = stompClient.subscribe("/topic/admin/" + currentUsername + "/users", onAdminUserDataReceived);
+        } else {
+            hideElement(adminPanel)
+            if (adminSubscription) {
+                adminSubscription.unsubscribe();
+            }
+        }
+
+    } else if ("DELETE" === currentUser.actionType) {
+        onClickDeleteUserAccount(null);
+    }
+}
+
+function onAdminUserDataReceived(payload) {
+    var adminUser = JSON.parse(payload.body);
+    console.log(adminUser)
+
+    if ("GET" === adminUser.actionType) {
+        writeInputs(adminUser);
+    } else if ("CREATE" === adminUser.actionType || "UPDATE" === adminUser.actionType || "DELETE" === adminUser.actionType) {
+        displaySuccessNotification("Success: " + adminUser.actionType);
+    }
+}
+
+function writeInputs(adminUser) {
+
+    if (!adminUpdateUserForm.classList.contains("hidden")) {
+        adminUpdateUserNameInput.value = adminUser.name;
+        adminUpdateUserEmailInput.value = adminUser.email;
+        adminUpdateUserRolesInput.value = adminUser.roles.toString();
+    }
+}
+
+var successNotificationElement = document.querySelector('#success-notification')
+
+function displaySuccessNotification(notifyMessage) {
+    successNotificationElement.textContent = notifyMessage;
+    successNotificationElement.style.color = 'green';
+
+    displayElement(successNotificationElement);
+    setTimeout(
+        () => hideElement(successNotificationElement),
+        5500
+    );
+}
+
+var adminPanel = document.querySelector('#admin-panel')
+var adminCreateUserButton = document.querySelector('#admin-create-user-button')
+var adminUpdateUserButton = document.querySelector('#admin-update-user-button')
+var adminDeleteUserButton = document.querySelector('#admin-delete-user-button')
+
+var adminCreateUserForm = document.querySelector('#admin-create-user-form');
+var adminUpdateUserForm = document.querySelector('#admin-update-user-form');
+var adminDeleteUserForm = document.querySelector('#admin-delete-user-form');
+
+var adminCreateUserUsernameInput = document.querySelector('#admin-create-username');
+var adminCreateUserNameInput = document.querySelector('#admin-create-name');
+var adminCreateUserEmailInput = document.querySelector('#admin-create-email');
+var adminCreateUserRolesInput = document.querySelector('#admin-create-roles');
+var adminCreateUserPasswordInput = document.querySelector('#admin-create-password');
+var adminCreateUserReplyPasswordInput = document.querySelector('#admin-create-reply-password');
+var confirmAdminCreateUserButton = document.querySelector('#confirm-admin-create-user');
+var backToAdminChooseButtonsFromCreateButton = document.querySelector('#back-to-admin-choose-buttons-from-create');
+
+confirmAdminCreateUserButton.onclick = (event) => {
+    var username = adminCreateUserUsernameInput.value.trim();
+    var name = adminCreateUserNameInput.value.trim();
+    var email = adminCreateUserEmailInput.value.trim();
+    var roles = adminCreateUserRolesInput.value.trim().split(",").map(role => role.trim());
+    var password = adminCreateUserPasswordInput.value.trim();
+    var replyPassword = adminCreateUserReplyPasswordInput.value.trim();
+
+    if (username &&
+        name &&
+        email &&
+        roles.length > 0 &&
+        password === replyPassword
+    ) {
+        var payload = {
+            name: name,
+            email: email,
+            roleList: roles.toString(),
+            username: username,
+            password: password
+        }
+        stompClient.send('/app/admin/users:create', {}, JSON.stringify(payload));
+    }
+    adminCreateUserUsernameInput.value = '';
+    adminCreateUserNameInput.value = '';
+    adminCreateUserEmailInput.value = '';
+    adminCreateUserRolesInput.value = '';
+    adminCreateUserPasswordInput.value = '';
+    adminCreateUserReplyPasswordInput.value = '';
+}
+
+adminCreateUserButton.onclick = (event) => {
+    displayElement(adminCreateUserForm);
+    hideAdminChooseButtons();
+}
+
+backToAdminChooseButtonsFromCreateButton.onclick = (event) => {
+    hideElement(adminCreateUserForm)
+    displayAdminChooseButton()
+}
+
+var adminUpdateUserUsernameInput = document.querySelector('#admin-update-username');
+var adminUpdateUserNameInput = document.querySelector('#admin-update-name');
+var adminUpdateUserEmailInput = document.querySelector('#admin-update-email');
+var adminUpdateUserRolesInput = document.querySelector('#admin-update-roles');
+var adminSearchUserDataToUpdate = document.querySelector('#admin-update-search-user-data-to-update');
+var confirmAdminUpdateUserButton = document.querySelector('#confirm-admin-update-user');
+var backToAdminChooseButtonsFromUpdateButton = document.querySelector('#back-to-admin-choose-buttons-from-update');
+
+adminSearchUserDataToUpdate.onclick = (event) => {
+    var username = adminUpdateUserUsernameInput.value.trim();
+
+    if (username) {
+        var payload = {
+            username: username
+        }
+        stompClient.send('/app/admin/users:get', {}, JSON.stringify(payload));
+    }
+}
+
+adminUpdateUserButton.onclick = (event) => {
+    displayElement(adminUpdateUserForm);
+    hideAdminChooseButtons();
+}
+
+confirmAdminUpdateUserButton.onclick = (event) => {
+    var username = adminUpdateUserUsernameInput.value.trim();
+    var name = adminUpdateUserNameInput.value.trim();
+    var email = adminUpdateUserEmailInput.value.trim();
+    var roles = adminUpdateUserRolesInput.value.trim().split(",").map(role => role.trim());
+
+    if (username &&
+        name &&
+        email &&
+        roles.length > 0
+    ) {
+        var payload = {
+            name: name,
+            email: email,
+            roleList: roles.toString(),
+            username: username
+        }
+        stompClient.send('/app/admin/users:update', {}, JSON.stringify(payload));
+    }
+    adminUpdateUserUsernameInput.value = '';
+    adminUpdateUserNameInput.value = '';
+    adminUpdateUserEmailInput.value = '';
+    adminUpdateUserRolesInput.value = '';
+}
+
+backToAdminChooseButtonsFromUpdateButton.onclick = (event) => {
+    hideElement(adminUpdateUserForm)
+    displayAdminChooseButton()
+}
+
+var adminDeleteUserUsernameInput = document.querySelector('#admin-delete-username');
+var confirmAdminDeleteUserButton = document.querySelector('#confirm-admin-delete-user');
+var backToAdminChooseButtonsFromDeleteButton = document.querySelector('#back-to-admin-choose-buttons-from-delete');
+
+adminDeleteUserButton.onclick = (event) => {
+    displayElement(adminDeleteUserForm);
+    hideAdminChooseButtons();
+}
+
+confirmAdminDeleteUserButton.onclick = (event) => {
+    var username = adminDeleteUserUsernameInput.value.trim();
+
+    if (username) {
+        var payload = {
+            username: username
+        }
+        stompClient.send('/app/admin/users:delete', {}, JSON.stringify(payload));
+    }
+    adminDeleteUserUsernameInput.value = '';
+}
+
+backToAdminChooseButtonsFromDeleteButton.onclick = (event) => {
+    hideElement(adminDeleteUserForm)
+    displayAdminChooseButton()
+}
+
+function hideAdminChooseButtons() {
+    hideElement(adminCreateUserButton);
+    hideElement(adminUpdateUserButton);
+    hideElement(adminDeleteUserButton);
+}
+
+function displayAdminChooseButton() {
+    displayElement(adminCreateUserButton);
+    displayElement(adminUpdateUserButton);
+    displayElement(adminDeleteUserButton);
+}
+
+function displayElement(element) {
+    element.classList.remove('hidden');
+}
+
+function hideElement(element) {
+    element.classList.add('hidden');
 }
 
 var colors = [
@@ -734,6 +1064,7 @@ function getAvatarColor(messageSender) {
         hash = 31 * hash + messageSender.charCodeAt(i);
     }
     var index = Math.abs(hash % colors.length);
+
     return colors[index];
 }
 
