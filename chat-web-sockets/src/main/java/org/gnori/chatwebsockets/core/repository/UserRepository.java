@@ -33,7 +33,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     void deleteChatRoomId(String username, String id);
 
     @Query(value = """
-            select count(*) = 1 from users where username = :username and chat_ids @> to_jsonb(:id)
+            select count(*) = 1
+            from users
+            where username = :username and chat_ids @> to_jsonb(:id)
            """, nativeQuery = true)
     boolean hasChatRoomId(String username, String id);
 

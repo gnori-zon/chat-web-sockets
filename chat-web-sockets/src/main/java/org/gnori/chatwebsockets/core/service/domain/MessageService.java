@@ -9,7 +9,7 @@ import org.gnori.chatwebsockets.core.exception.impl.NotFoundException;
 
 import java.util.List;
 
-public interface MessageService<A> {
+public interface MessageService<A> extends DomainService {
 
     List<MessageDto> getAll(MessagePayload payload, A user) throws ForbiddenException;
     MessageDto get(MessagePayload payload, A user) throws ForbiddenException, NotFoundException;

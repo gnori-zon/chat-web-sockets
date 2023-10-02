@@ -3,6 +3,7 @@ package org.gnori.chatwebsockets.api.controller.message;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.gnori.chatwebsockets.api.controller.BaseWebSocketController;
 import org.gnori.chatwebsockets.api.controller.message.payload.CreateMessagePayload;
 import org.gnori.chatwebsockets.api.controller.message.payload.MessagePayload;
 import org.gnori.chatwebsockets.api.controller.message.payload.UpdateMessagePayload;
@@ -11,10 +12,7 @@ import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Optional;
 
 import static org.gnori.chatwebsockets.api.constant.Endpoint.*;
 import static org.gnori.chatwebsockets.core.service.security.util.SecurityUtil.convertFrom;
@@ -22,28 +20,20 @@ import static org.gnori.chatwebsockets.core.service.security.util.SecurityUtil.c
 @RestController
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class MessageController {
+public class MessageController extends BaseWebSocketController {
 
     MessageService<CustomUserDetails> messageService;
-    SimpMessagingTemplate simpMessagingTemplate;
 
     @MessageMapping(OLD_MESSAGES)
     public void getOldMessages(
             @Payload MessagePayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
+        executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
-                    final String chatRoomId = payload.getChatRoomId();
-                    final CustomUserDetails user = convertFrom(headerAccessor.getUser());
 
-                    simpMessagingTemplate.convertAndSend(
-                            String.format(TOPIC_CHAT_ROOM_OLD_MESSAGES, chatRoomId),
-                            messageService.getAll(
-                                    payload,
-                                    user
-                            )
-                    );
+                    final CustomUserDetails user = convertFrom(headerAccessor.getUser());
+                    messageService.getAll(payload, user);
                 }
         );
     }
@@ -53,18 +43,11 @@ public class MessageController {
             @Payload CreateMessagePayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
+        executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
-                    final String chatRoomId = payload.getChatRoomId();
-                    final CustomUserDetails user = convertFrom(headerAccessor.getUser());
 
-                    simpMessagingTemplate.convertAndSend(
-                            String.format(TOPIC_CHAT_ROOM_MESSAGES, chatRoomId),
-                            messageService.create(
-                                    payload,
-                                    user
-                            )
-                    );
+                    final CustomUserDetails user = convertFrom(headerAccessor.getUser());
+                    messageService.create(payload, user);
                 }
         );
     }
@@ -74,18 +57,11 @@ public class MessageController {
             @Payload UpdateMessagePayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
+        executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
-                    final String chatRoomId = payload.getChatRoomId();
-                    final CustomUserDetails user = convertFrom(headerAccessor.getUser());
 
-                    simpMessagingTemplate.convertAndSend(
-                            String.format(TOPIC_CHAT_ROOM_OLD_MESSAGES, chatRoomId),
-                            messageService.update(
-                                    payload,
-                                    user
-                            )
-                    );
+                    final CustomUserDetails user = convertFrom(headerAccessor.getUser());
+                    messageService.update(payload, user);
                 }
         );
     }
@@ -95,18 +71,11 @@ public class MessageController {
             @Payload MessagePayload payload,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        Optional.ofNullable(headerAccessor.getSessionAttributes()).ifPresent(
+        executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
-                    final String chatRoomId = payload.getChatRoomId();
-                    final CustomUserDetails user = convertFrom(headerAccessor.getUser());
 
-                    simpMessagingTemplate.convertAndSend(
-                            String.format(TOPIC_CHAT_ROOM_UPDATE_MESSAGES, chatRoomId),
-                            messageService.delete(
-                                    payload,
-                                    user
-                            )
-                    );
+                    final CustomUserDetails user = convertFrom(headerAccessor.getUser());
+                    messageService.delete(payload, user);
                 }
         );
     }

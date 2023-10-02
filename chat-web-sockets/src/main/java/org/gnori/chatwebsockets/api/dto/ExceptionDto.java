@@ -1,4 +1,4 @@
-package org.gnori.chatwebsockets.api.controller.chatroom.payload;
+package org.gnori.chatwebsockets.api.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UpdateChatRoomPayload extends ChatRoomPayload {
-    String name;
-    String description;
+public class ExceptionDto {
+    Integer statusCode;
+    String message;
 }
