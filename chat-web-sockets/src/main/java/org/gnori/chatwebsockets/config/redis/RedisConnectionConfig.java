@@ -20,6 +20,7 @@ public class RedisConnectionConfig {
 
     @Bean
     public JedisConnectionFactory jedisConnectionFactory() {
+
         return new JedisConnectionFactory(
                 new RedisStandaloneConfiguration(host, port)
         );
@@ -29,13 +30,16 @@ public class RedisConnectionConfig {
     public RedisTemplate<String, Object> redisTemplate(
 
     ) {
+
         final RedisTemplate<String, Object> template = new RedisTemplate<>();
+
         template.setConnectionFactory(jedisConnectionFactory());
         template.setKeySerializer(new StringRedisSerializer());
         template.setHashKeySerializer(new StringRedisSerializer());
         template.setValueSerializer(new JdkSerializationRedisSerializer());
         template.setEnableTransactionSupport(true);
         template.afterPropertiesSet();
+
         return template;
     }
 }

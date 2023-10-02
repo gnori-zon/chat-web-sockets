@@ -11,6 +11,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
+
         registry.addViewController(START_PAGE_PATH).setViewName("index.html");
     }
 
