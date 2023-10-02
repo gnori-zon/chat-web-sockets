@@ -52,10 +52,10 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
 
     @Override
     public UserDto create(CreateUserPayload payload) {
+
         if (repository.existsByUsername(payload.getUsername())) {
             throw new ConflictException(EXIST_USERNAME_EX);
         }
-
         final User userEntity = createFrom(payload);
 
         return converter.convertWithActionType(repository.save(userEntity), ActionType.CREATE);
@@ -63,6 +63,7 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
 
     @Override
     public UserDto update(UpdateUserPayload payload, CustomUserDetails user) {
+
         final Long userId = user.getUserId();
         final User userEntity = repository.findById(userId)
                 .orElseThrow(NotFoundException::new);
@@ -75,7 +76,10 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
 
     @Override
     public UserDto changePassword(ChangePasswordUserPayload payload, CustomUserDetails user) {
-        if (isNotValidOldPassword(payload, user)) throw new ConflictException("Not valid old password");
+
+        if (isNotValidOldPassword(payload, user)){
+            throw new ConflictException("Not valid old password");
+        }
         final Long userId = user.getUserId();
         final User userEntity = repository.findById(userId)
                 .orElseThrow(NotFoundException::new);
@@ -107,6 +111,7 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
         return invokeIfAdmin(
                 adminUser,
                 () -> {
+
                     if (repository.existsByUsername(payload.getUsername())) {
                         throw new ConflictException(EXIST_USERNAME_EX);
                     }
@@ -123,6 +128,7 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
         return invokeIfAdmin(
                 adminUser,
                 () -> {
+
                     final User oldUserEntity = repository.findByUsername(payload.getUsername())
                             .orElseThrow(NotFoundException::new);
 
@@ -141,6 +147,7 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
         return invokeIfAdmin(
                 adminUser,
                 () -> {
+
                     final User user = repository.findByUsername(payload.getUsername())
                             .orElseThrow(NotFoundException::new);
 
@@ -163,6 +170,7 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
         chatRoomService.getAll(user)
                 .forEach(
                         chat -> {
+
                             if (user.getUsername().equals(chat.getOwnerUsername())) {
                                 chatRoomService.delete(new ChatRoomPayload(chat.getId()), user);
                             }

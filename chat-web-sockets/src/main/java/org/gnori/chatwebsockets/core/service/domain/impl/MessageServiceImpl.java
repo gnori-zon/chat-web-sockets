@@ -37,6 +37,7 @@ public class MessageServiceImpl implements MessageService<CustomUserDetails> {
 
     @Override
     public List<MessageDto> getAll(MessagePayload payload, CustomUserDetails user) {
+
         final String chatRoomId = payload.getChatRoomId();
         final List<String> chatIds = getUserChatIds(user);
 
@@ -49,10 +50,12 @@ public class MessageServiceImpl implements MessageService<CustomUserDetails> {
 
     @Override
     public MessageDto get(MessagePayload payload, CustomUserDetails user) {
+
         final String chatRoomId = payload.getChatRoomId();
         final List<String> chatIds = getUserChatIds(user);
 
         if (chatIds.contains(chatRoomId)) {
+
             final MessagePrimaryKey primaryKey = new MessagePrimaryKey(payload.getFromUser(), payload.getChatRoomId(), payload.getDate());
 
             return converter.convertWithActionType(getMessageOrElseThrow(primaryKey), ActionType.GET);
@@ -62,10 +65,12 @@ public class MessageServiceImpl implements MessageService<CustomUserDetails> {
 
     @Override
     public MessageDto create(CreateMessagePayload payload, CustomUserDetails user) {
+
         final String chatRoomId = payload.getChatRoomId();
         final List<String> chatIds = getUserChatIds(user);
 
         if (chatIds.contains(chatRoomId)) {
+
             final Message message = new Message(
                     new MessagePrimaryKey(payload.getFromUser(), payload.getChatRoomId(), payload.getDate()),
                     user.getUsername(),
@@ -79,10 +84,12 @@ public class MessageServiceImpl implements MessageService<CustomUserDetails> {
 
     @Override
     public MessageDto update(UpdateMessagePayload payload, CustomUserDetails user) {
+
         final String chatRoomId = payload.getChatRoomId();
         final List<String> chatIds = getUserChatIds(user);
 
         if (chatIds.contains(chatRoomId)) {
+
             final MessagePrimaryKey primaryKey = new MessagePrimaryKey(payload.getFromUser(), payload.getChatRoomId(), payload.getDate());
             final Message message = getMessageOrElseThrow(primaryKey);
             message.setFromUser(payload.getFromUser());
@@ -95,13 +102,15 @@ public class MessageServiceImpl implements MessageService<CustomUserDetails> {
 
     @Override
     public MessageDto delete(MessagePayload payload, CustomUserDetails user) {
+
         final String chatRoomId = payload.getChatRoomId();
         final List<String> chatIds = getUserChatIds(user);
 
         if (chatIds.contains(chatRoomId)) {
-            if (user.getUsername().equals(payload.getFromUser()) || isOwnerChatRoom(chatRoomId, user)) {
-                final MessagePrimaryKey primaryKey = new MessagePrimaryKey(payload.getFromUser(), payload.getChatRoomId(), payload.getDate());
 
+            if (user.getUsername().equals(payload.getFromUser()) || isOwnerChatRoom(chatRoomId, user)) {
+
+                final MessagePrimaryKey primaryKey = new MessagePrimaryKey(payload.getFromUser(), payload.getChatRoomId(), payload.getDate());
                 repository.deleteByKey(primaryKey.getUsername(), primaryKey.getChatRoomId(), primaryKey.getDate());
 
                 return converter.convertWithActionType(new Message(primaryKey, null, null), ActionType.DELETE);
@@ -112,6 +121,7 @@ public class MessageServiceImpl implements MessageService<CustomUserDetails> {
 
 
     private boolean isOwnerChatRoom(String chatRoomId, CustomUserDetails user) {
+
         return user.getUsername().equals(
                 chatRoomRepository.findById(chatRoomId)
                         .map(ChatRoom::getOwnerUsername)
@@ -120,11 +130,13 @@ public class MessageServiceImpl implements MessageService<CustomUserDetails> {
     }
 
     private Message getMessageOrElseThrow(MessagePrimaryKey primaryKey) {
+
         return repository.findByKey(primaryKey.getUsername(), primaryKey.getChatRoomId(), primaryKey.getDate())
                 .orElseThrow(NotFoundException::new);
     }
 
     private List<String> getUserChatIds(CustomUserDetails user) {
+
         final Long userId = user.getUserId();
         final User userEntity = userRepository.findById(userId)
                 .orElseThrow(NotFoundException::new);         /* get from userRepository because chatIds is mutable parameter

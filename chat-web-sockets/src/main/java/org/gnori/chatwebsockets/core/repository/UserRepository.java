@@ -39,8 +39,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
            """, nativeQuery = true)
     boolean hasChatRoomId(String username, String id);
 
-    void deleteByUsername(String username);
-
     boolean existsByUsername(String username);
 
 }

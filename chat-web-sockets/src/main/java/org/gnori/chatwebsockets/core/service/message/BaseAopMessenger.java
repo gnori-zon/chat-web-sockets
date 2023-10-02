@@ -26,7 +26,10 @@ public class BaseAopMessenger {
         );
     }
 
-    protected Object invokeAfterProceed(ProceedingJoinPoint proceedingJoinPoint, BiConsumer<Object[], Object> biConsumer) throws Throwable {
+    protected Object invokeAfterProceed(
+            ProceedingJoinPoint proceedingJoinPoint,
+            BiConsumer<Object[], Object> biConsumer
+    ) throws Throwable {
 
         final Object[] args = proceedingJoinPoint.getArgs();
         final Object returningValue = proceedingJoinPoint.proceed(args);

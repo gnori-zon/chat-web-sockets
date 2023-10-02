@@ -19,7 +19,6 @@ import org.gnori.chatwebsockets.core.repository.ChatRoomRepository;
 import org.gnori.chatwebsockets.core.repository.MessageRepository;
 import org.gnori.chatwebsockets.core.repository.UserRepository;
 import org.gnori.chatwebsockets.core.service.domain.ChatRoomService;
-import org.gnori.chatwebsockets.core.service.domain.MessageService;
 import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +38,7 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
 
     @Override
     public List<ChatRoomDto> getAll(CustomUserDetails user) {
+
         final Long userId = user.getUserId();
         final User userEntity = userRepository.findById(userId)
                 .orElseThrow(NotFoundException::new);
@@ -99,9 +99,11 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
         final Optional<ChatRoom> optionalChatRoom = repository.findById(chatRoomId);
 
         if (optionalChatRoom.isPresent()) {
+
             final ChatRoom chatRoom = optionalChatRoom.get();
 
             if (user.getUsername().equals(chatRoom.getOwnerUsername())) {
+
                 chatRoom.setName(payload.getName());
                 chatRoom.setDescription(payload.getDescription());
 
@@ -122,8 +124,8 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
             final ChatRoom chatRoom = optionalChatRoom.get();
 
             if (user.getUsername().equals(chatRoom.getOwnerUsername())) {
-                repository.deleteById(chatRoomId);
 
+                repository.deleteById(chatRoomId);
                 chatRoom.getConnectedUsers()
                         .forEach(
                                 connectedUser -> {
@@ -140,21 +142,26 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
 
     @Override
     public ChatRoomDto deleteUser(UserChatRoomPayload payload, CustomUserDetails user) {
+
         final String chatRoomId = payload.getChatRoomId();
         final String username = payload.getUsername();
         final ChatRoom chatRoom = getChatRoomOrElseThrow(chatRoomId);
 
         if (isCanBeDeleted(chatRoom, user, username)) {
+
             if (isNotBlankList(chatRoom.getConnectedUsers())) {
+
                 final User deletingUser = userRepository.findByUsername(username)
                         .orElseThrow(NotFoundException::new);
 
                 boolean isDeleted = chatRoom.getConnectedUsers().remove(deletingUser);
+
                 if (isDeleted) {
                     repository.save(chatRoom);
                 }
             }
             userRepository.deleteChatRoomId(username, chatRoomId);
+
             return converter.convertWithActionType(chatRoom, ActionType.UPDATE);
         }
         throw new ForbiddenException();
@@ -162,16 +169,19 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
 
     @Override
     public ChatRoomDto addUser(UserChatRoomPayload payload, CustomUserDetails user) {
+
         final String chatRoomId = payload.getChatRoomId();
         final String username = payload.getUsername();
         ChatRoom chatRoom = getChatRoomOrElseThrow(chatRoomId);
 
         if (user.getUsername().equals(chatRoom.getOwnerUsername())) {
+
             final User addingUser = userRepository.findByUsername(username)
                     .orElseThrow(NotFoundException::new);
 
             final Set<User> existUser = new HashSet<>(ListUtils.defaultIfNull(chatRoom.getConnectedUsers(), new ArrayList<>()));
             final Set<String> chatIds = new HashSet<>(ListUtils.defaultIfNull(addingUser.getChatIds(), new ArrayList<>()));
+
             if (!chatIds.contains(chatRoomId)) {
                 existUser.add(addingUser);
                 chatRoom.setConnectedUsers(existUser.stream().toList());
@@ -181,12 +191,14 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
                 chatRoom = repository.save(chatRoom);
                 userRepository.save(addingUser);
             }
+
             return converter.convertWithActionType(chatRoom, ActionType.UPDATE);
         }
         throw new ForbiddenException();
     }
 
     private boolean isCanBeDeleted(ChatRoom chatRoom, CustomUserDetails user, String username) {
+
         if (user.getUsername().equals(chatRoom.getOwnerUsername())) {
             return !user.getUsername().equals(username);
         } else {
@@ -195,6 +207,7 @@ public class ChatRoomServiceImpl implements ChatRoomService<CustomUserDetails> {
     }
 
     private ChatRoom getChatRoomOrElseThrow(String chatRoomId) {
+
         return repository.findById(chatRoomId)
                 .orElseThrow(NotFoundException::new);
     }

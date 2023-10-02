@@ -12,6 +12,7 @@ import java.util.Objects;
 public class SecurityUtil {
 
     public static CustomUserDetails convertFrom(Principal user) {
+
         return Objects.requireNonNull(
                 (CustomUserDetails)((UsernamePasswordAuthenticationToken) user).getPrincipal()
         );
