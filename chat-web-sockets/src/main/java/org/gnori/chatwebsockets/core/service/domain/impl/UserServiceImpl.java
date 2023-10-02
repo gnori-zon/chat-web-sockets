@@ -29,6 +29,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -131,10 +132,9 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
 
                     final User oldUserEntity = repository.findByUsername(payload.getUsername())
                             .orElseThrow(NotFoundException::new);
-
                     oldUserEntity.setName(payload.getName());
                     oldUserEntity.setEmail(payload.getEmail());
-                    oldUserEntity.setRoles(payload.getRoleList());
+                    oldUserEntity.setRoles(convertFrom(payload.getRoleList()));
 
                     return converter.convertWithActionType(repository.save(oldUserEntity), ActionType.UPDATE);
                 }
@@ -154,7 +154,7 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
                     deleteOwnedChatRoom(new CustomUserDetails(user));
                     repository.delete(user);
 
-                    return converter.convertWithActionType(emptyUser(user.getId()), ActionType.DELETE);
+                    return converter.convertWithActionType(user, ActionType.DELETE);
                 }
         );
     }
@@ -185,7 +185,7 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
     private User createFrom(CreateAdminUserPayload payload) {
 
         final User user = createFrom(payload.getUsername(), payload.getPassword(), payload.getName(), payload.getEmail());
-        user.setRoles(payload.getRoleList());
+        user.setRoles(convertFrom(payload.getRoleList()));
 
         return user;
     }
@@ -210,12 +210,16 @@ public class UserServiceImpl implements UserService<CustomUserDetails> {
         );
     }
 
-    private User emptyUser(Long id) {
+    private List<Role> convertFrom(String roleList) {
 
-        final User emptyUser = new User(null, null, null, null, null, null);
-        emptyUser.setId(id);
+        if (roleList == null || roleList.isBlank()) {
+            return List.of(Role.USER);
+        }
 
-        return emptyUser;
+        return Arrays.stream(roleList.toUpperCase()
+                        .split(","))
+                .map(role -> Role.valueOf(role.trim()))
+                .toList();
     }
 
     private <T> T invokeIfAdmin(@NonNull CustomUserDetails userDetails, Supplier<T> supplier) {
