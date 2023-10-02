@@ -7,17 +7,12 @@ import org.gnori.chatwebsockets.api.controller.BaseWebSocketController;
 import org.gnori.chatwebsockets.api.controller.chatroom.payload.ChatRoomPayload;
 import org.gnori.chatwebsockets.api.controller.chatroom.payload.CreateChatRoomPayload;
 import org.gnori.chatwebsockets.api.controller.chatroom.payload.UpdateChatRoomPayload;
-import org.gnori.chatwebsockets.api.dto.ActionType;
-import org.gnori.chatwebsockets.api.dto.ChatRoomDto;
 import org.gnori.chatwebsockets.core.service.domain.ChatRoomService;
 import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 import static org.gnori.chatwebsockets.api.constant.Endpoint.*;
 import static org.gnori.chatwebsockets.core.service.security.util.SecurityUtil.convertFrom;
@@ -35,6 +30,7 @@ public class ChatRoomController extends BaseWebSocketController {
     ) {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
+
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     chatRoomService.getAll(user);
                 }
@@ -48,6 +44,7 @@ public class ChatRoomController extends BaseWebSocketController {
     ) {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
+
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     chatRoomService.get(payload, user);
                 }
@@ -61,6 +58,7 @@ public class ChatRoomController extends BaseWebSocketController {
     ) {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
+
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     chatRoomService.create(payload, user);
                 }
@@ -74,6 +72,7 @@ public class ChatRoomController extends BaseWebSocketController {
     ) {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
+
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     chatRoomService.update(payload, user);
                 }
@@ -87,6 +86,7 @@ public class ChatRoomController extends BaseWebSocketController {
     ) {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
+
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     chatRoomService.delete(payload, user);
                 }

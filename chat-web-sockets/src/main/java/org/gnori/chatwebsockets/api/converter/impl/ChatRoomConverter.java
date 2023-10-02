@@ -22,12 +22,16 @@ public class ChatRoomConverter implements BaseDtoConverter<ChatRoomDto, ChatRoom
 
     @Override
     public ChatRoom convertFrom(ChatRoomDto dto) {
-        if (dto == null) return null;
+
+        if (dto == null) {
+            return null;
+        }
         final ChatRoom chatRoom = new ChatRoom();
 
         chatRoom.setName(dto.getName());
         chatRoom.setDescription(dto.getDescription());
         chatRoom.setOwnerUsername(dto.getOwnerUsername());
+
         return chatRoom;
     }
 

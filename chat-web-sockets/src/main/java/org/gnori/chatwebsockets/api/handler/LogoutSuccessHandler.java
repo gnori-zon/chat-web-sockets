@@ -19,9 +19,7 @@ public class LogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             Authentication authentication
     ) {
 
-        response.setContentType(
-                ResponseHandlerUtils.contentTypeWithCharset(MediaType.TEXT_HTML, StandardCharsets.UTF_8)
-        );
+        response.setContentType(ResponseHandlerUtils.contentTypeWithCharset(MediaType.TEXT_HTML, StandardCharsets.UTF_8));
         response.setStatus(HttpServletResponse.SC_OK);
     }
 }

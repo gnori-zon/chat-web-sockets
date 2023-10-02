@@ -22,9 +22,7 @@ public class AuthFailureHandler extends SimpleUrlAuthenticationFailureHandler {
             AuthenticationException exception
     ) throws IOException {
 
-        response.setContentType(
-                ResponseHandlerUtils.contentTypeWithCharset(MediaType.TEXT_HTML, StandardCharsets.UTF_8)
-        );
+        response.setContentType(ResponseHandlerUtils.contentTypeWithCharset(MediaType.TEXT_HTML, StandardCharsets.UTF_8));
         response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication Failed. Wrong username or password or both");
     }
 }

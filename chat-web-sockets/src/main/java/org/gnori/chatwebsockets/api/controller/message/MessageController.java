@@ -7,7 +7,6 @@ import org.gnori.chatwebsockets.api.controller.BaseWebSocketController;
 import org.gnori.chatwebsockets.api.controller.message.payload.CreateMessagePayload;
 import org.gnori.chatwebsockets.api.controller.message.payload.MessagePayload;
 import org.gnori.chatwebsockets.api.controller.message.payload.UpdateMessagePayload;
-import org.gnori.chatwebsockets.api.dto.MessageDto;
 import org.gnori.chatwebsockets.core.service.domain.MessageService;
 import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -32,6 +31,7 @@ public class MessageController extends BaseWebSocketController {
     ) {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
+
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     messageService.getAll(payload, user);
                 }
@@ -45,9 +45,9 @@ public class MessageController extends BaseWebSocketController {
     ) {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
+
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     messageService.create(payload, user);
-
                 }
         );
     }
@@ -59,6 +59,7 @@ public class MessageController extends BaseWebSocketController {
     ) {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
+
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     messageService.update(payload, user);
                 }
@@ -72,6 +73,7 @@ public class MessageController extends BaseWebSocketController {
     ) {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
+
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     messageService.delete(payload, user);
                 }
