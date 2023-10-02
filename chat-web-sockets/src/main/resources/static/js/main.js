@@ -19,6 +19,9 @@ var chatRoomsSubscription = null
 
 var usersSubscription = null;
 var errorSubscription = null;
+
+var adminSubscription = null
+
 // choose sign-in or sign-up
 var choosePage = document.querySelector("#main-page")
 var loginPage = document.querySelector("#login-page")
@@ -124,6 +127,9 @@ function logout() {
             if (errorSubscription) {
                 errorSubscription.unsubscribe();
             }
+            if (adminSubscription) {
+                adminSubscription.unsubscribe();
+            }
             if (messageSubscription) {
                 messageSubscription.unsubscribe();
             }
@@ -150,10 +156,11 @@ function connect() {
 }
 
 function onConnected(options) {
-    chatRoomsSubscription = stompClient.subscribe(('/topic/' + currentUsername + '/chat-rooms'), onChatRoomReceived);
 
+    chatRoomsSubscription = stompClient.subscribe('/topic/' + currentUsername + '/chat-rooms', onChatRoomReceived);
     usersSubscription = stompClient.subscribe('/topic/' + currentUsername + '/users', onUserDataReceived);
     errorSubscription = stompClient.subscribe('/topic/' + currentUsername + '/errors', onBusinessError);
+
     stompClient.send('/app/users:get');
     stompClient.send('/app/chat-rooms:list');
     displayElement(userSettingsPage);
@@ -739,6 +746,9 @@ function onClickDeleteUserAccount(event) {
     if (errorSubscription) {
         errorSubscription.unsubscribe();
     }
+    if (adminSubscription) {
+        adminSubscription.unsubscribe();
+    }
     if (messageSubscription) {
         messageSubscription.unsubscribe();
     }
@@ -753,7 +763,6 @@ function onClickDeleteUserAccount(event) {
         stompClient = null;
     }
     clearPage();
-
 }
 
 var editUserPage = document.querySelector("#user-edit-page");
@@ -824,14 +833,65 @@ logoutButton.onclick = (event) => {
 function onUserDataReceived(payload) {
     currentUser = JSON.parse(payload.body);
 
-    userSettingsUsername.textContent = 'username: ' + currentUser.username;
-    userSettingsName.textContent = 'name: ' + currentUser.name;
-    userSettingsEmail.textContent = 'email: ' + currentUser.email;
+    console.log(currentUser)
+    if ("GET" === currentUser.actionType ||
+        "UPDATE" === currentUser.actionType) {
 
+        userSettingsUsername.textContent = 'username: ' + currentUser.username;
+        userSettingsName.textContent = 'name: ' + currentUser.name;
+        userSettingsEmail.textContent = 'email: ' + currentUser.email;
 
-    if (currentUser.roles.includes('ADMIN')) {
-        displayElement(adminPanel)
+        console.log("UDPATED")
+
+        if (currentUser.roles.includes('ADMIN')) {
+            displayElement(adminPanel)
+            if (adminSubscription) {
+                adminSubscription.unsubscribe();
+            }
+            adminSubscription = stompClient.subscribe("/topic/admin/" + currentUsername + "/users", onAdminUserDataReceived);
+        } else {
+            hideElement(adminPanel)
+            if (adminSubscription) {
+                adminSubscription.unsubscribe();
+            }
+        }
+
+    } else if ("DELETE" === currentUser.actionType) {
+        onClickDeleteUserAccount(null);
     }
+}
+
+function onAdminUserDataReceived(payload) {
+    var adminUser = JSON.parse(payload.body);
+    console.log(adminUser)
+
+    if ("GET" === adminUser.actionType) {
+        writeInputs(adminUser);
+    } else if ("CREATE" === adminUser.actionType || "UPDATE" === adminUser.actionType || "DELETE" === adminUser.actionType) {
+        displaySuccessNotification("Success: " + adminUser.actionType);
+    }
+}
+
+function writeInputs(adminUser) {
+
+    if (!adminUpdateUserForm.classList.contains("hidden")) {
+        adminUpdateUserNameInput.value = adminUser.name;
+        adminUpdateUserEmailInput.value = adminUser.email;
+        adminUpdateUserRolesInput.value = adminUser.roles.toString();
+    }
+}
+
+var successNotificationElement = document.querySelector('#success-notification')
+
+function displaySuccessNotification(notifyMessage) {
+    successNotificationElement.textContent = notifyMessage;
+    successNotificationElement.style.color = 'green';
+
+    displayElement(successNotificationElement);
+    setTimeout(
+        () => hideElement(successNotificationElement),
+        5500
+    );
 }
 
 var adminPanel = document.querySelector('#admin-panel')
@@ -852,7 +912,7 @@ var adminCreateUserReplyPasswordInput = document.querySelector('#admin-create-re
 var confirmAdminCreateUserButton = document.querySelector('#confirm-admin-create-user');
 var backToAdminChooseButtonsFromCreateButton = document.querySelector('#back-to-admin-choose-buttons-from-create');
 
-confirmAdminCreateUserButton.onclick = (event) => {// todo: received created User
+confirmAdminCreateUserButton.onclick = (event) => {
     var username = adminCreateUserUsernameInput.value.trim();
     var name = adminCreateUserNameInput.value.trim();
     var email = adminCreateUserEmailInput.value.trim();
@@ -875,6 +935,12 @@ confirmAdminCreateUserButton.onclick = (event) => {// todo: received created Use
         }
         stompClient.send('/app/admin/users:create', {}, JSON.stringify(payload));
     }
+    adminCreateUserUsernameInput.value = '';
+    adminCreateUserNameInput.value = '';
+    adminCreateUserEmailInput.value = '';
+    adminCreateUserRolesInput.value = '';
+    adminCreateUserPasswordInput.value = '';
+    adminCreateUserReplyPasswordInput.value = '';
 }
 
 adminCreateUserButton.onclick = (event) => {
@@ -895,7 +961,7 @@ var adminSearchUserDataToUpdate = document.querySelector('#admin-update-search-u
 var confirmAdminUpdateUserButton = document.querySelector('#confirm-admin-update-user');
 var backToAdminChooseButtonsFromUpdateButton = document.querySelector('#back-to-admin-choose-buttons-from-update');
 
-adminSearchUserDataToUpdate.onclick = (event) => {//todo: received search user
+adminSearchUserDataToUpdate.onclick = (event) => {
     var username = adminUpdateUserUsernameInput.value.trim();
 
     if (username) {
@@ -911,7 +977,7 @@ adminUpdateUserButton.onclick = (event) => {
     hideAdminChooseButtons();
 }
 
-confirmAdminUpdateUserButton.onclick = (event) => { // todo: received updated User
+confirmAdminUpdateUserButton.onclick = (event) => {
     var username = adminUpdateUserUsernameInput.value.trim();
     var name = adminUpdateUserNameInput.value.trim();
     var email = adminUpdateUserEmailInput.value.trim();
@@ -930,6 +996,10 @@ confirmAdminUpdateUserButton.onclick = (event) => { // todo: received updated Us
         }
         stompClient.send('/app/admin/users:update', {}, JSON.stringify(payload));
     }
+    adminUpdateUserUsernameInput.value = '';
+    adminUpdateUserNameInput.value = '';
+    adminUpdateUserEmailInput.value = '';
+    adminUpdateUserRolesInput.value = '';
 }
 
 backToAdminChooseButtonsFromUpdateButton.onclick = (event) => {
@@ -955,6 +1025,7 @@ confirmAdminDeleteUserButton.onclick = (event) => {
         }
         stompClient.send('/app/admin/users:delete', {}, JSON.stringify(payload));
     }
+    adminDeleteUserUsernameInput.value = '';
 }
 
 backToAdminChooseButtonsFromDeleteButton.onclick = (event) => {
