@@ -32,6 +32,7 @@ public class AdminUserController extends BaseWebSocketController {
     ) {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
+
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     userService.adminGet(payload, user);
                 }
@@ -45,6 +46,7 @@ public class AdminUserController extends BaseWebSocketController {
     ) {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
+
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     userService.adminCreate(payload, user);
                 }
@@ -58,6 +60,7 @@ public class AdminUserController extends BaseWebSocketController {
     ) {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
+
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     userService.adminUpdate(payload, user);
                 }
@@ -71,6 +74,7 @@ public class AdminUserController extends BaseWebSocketController {
     ) {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
+
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     userService.adminDelete(payload, user);
                 }

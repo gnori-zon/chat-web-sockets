@@ -40,6 +40,7 @@ public class UserController extends BaseWebSocketController {
     ) {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
+
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     userService.get(user);
                 }
@@ -53,6 +54,7 @@ public class UserController extends BaseWebSocketController {
     ) {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
+
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     userService.update(payload, user);
                 }
@@ -65,6 +67,7 @@ public class UserController extends BaseWebSocketController {
     ) {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
+
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     userService.delete(user);
                 }
@@ -78,6 +81,7 @@ public class UserController extends BaseWebSocketController {
     ) {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
+
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     userService.changePassword(payload, user);
                 }

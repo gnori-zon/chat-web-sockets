@@ -29,6 +29,7 @@ public class BusinessExceptionHandler {
         Optional.ofNullable(headerAccessor.getSessionAttributes())
                 .ifPresent(
                         sessionAttrs -> {
+
                             final CustomUserDetails user = convertFrom(headerAccessor.getUser());
 
                             simpMessagingTemplate.convertAndSend(

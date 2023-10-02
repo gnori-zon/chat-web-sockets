@@ -4,14 +4,11 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.gnori.chatwebsockets.api.controller.BaseWebSocketController;
-import org.gnori.chatwebsockets.api.dto.ActionType;
-import org.gnori.chatwebsockets.api.dto.ChatRoomDto;
 import org.gnori.chatwebsockets.core.service.domain.ChatRoomService;
 import org.gnori.chatwebsockets.core.service.security.CustomUserDetails;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.RestController;
 
 import static org.gnori.chatwebsockets.api.constant.Endpoint.*;
@@ -31,6 +28,7 @@ public class UserChatRoomController extends BaseWebSocketController {
     ) {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
+
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     chatRoomService.addUser(payload, user);
                 }
@@ -44,6 +42,7 @@ public class UserChatRoomController extends BaseWebSocketController {
     ) {
         executeIfSessionAttrsIsPresent(headerAccessor,
                 sessionAttrs -> {
+
                     final CustomUserDetails user = convertFrom(headerAccessor.getUser());
                     chatRoomService.deleteUser(payload, user);
                 }
